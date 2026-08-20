@@ -4,6 +4,7 @@
 // moved in on open. Responses are not stored anywhere in this prototype.
 // ---------------------------------------------------------------------------
 import { useEffect, useRef, useState } from 'react';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 
 const EASE_OPTIONS = [
   { value: '5', label: 'Very easy' },
@@ -21,6 +22,9 @@ const CLARITY_OPTIONS = [
 
 export function SatisfactionSurvey({ open, onClose }: { open: boolean; onClose: () => void }) {
   const headingRef = useRef<HTMLHeadingElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  useFocusTrap(open, dialogRef);
   const [ease, setEase] = useState('');
   const [clarity, setClarity] = useState('');
   const [comment, setComment] = useState('');
@@ -45,6 +49,7 @@ export function SatisfactionSurvey({ open, onClose }: { open: boolean; onClose: 
         role="dialog"
         aria-modal="true"
         aria-labelledby="survey-title"
+        ref={dialogRef}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="faq-dialog-head">

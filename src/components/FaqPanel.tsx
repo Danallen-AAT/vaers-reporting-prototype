@@ -5,6 +5,7 @@
 // ---------------------------------------------------------------------------
 import { useEffect, useRef } from 'react';
 import type { FaqItem } from '../config/faqs';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 
 interface FaqPanelProps {
   open: boolean;
@@ -14,6 +15,9 @@ interface FaqPanelProps {
 
 export function FaqPanel({ open, onClose, faqs }: FaqPanelProps) {
   const closeRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  useFocusTrap(open, dialogRef);
 
   useEffect(() => {
     if (!open) return;
@@ -34,6 +38,7 @@ export function FaqPanel({ open, onClose, faqs }: FaqPanelProps) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="faq-dialog-title"
+        ref={dialogRef}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="faq-dialog-head">

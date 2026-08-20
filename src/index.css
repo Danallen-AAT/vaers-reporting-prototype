@@ -64,8 +64,24 @@ body {
   left: 0;
 }
 
+/* Focus indicator.
+   A dark ring is used by default because most focusable elements sit on white
+   or light grey (9.6:1 against the card surface). On the dark navy chrome the
+   dark ring would vanish, so those switch to the amber ring (8.2:1 there).
+   Both exceed the 3:1 that WCAG 2.1 SC 1.4.11 asks of focus indicators; WCAG
+   2.0 SC 2.4.7 only requires that focus be visible, so this is deliberately
+   stricter than the standard the solicitation names. */
 :focus-visible {
-  outline: 4px solid var(--focus);
+  outline: 3px solid var(--primary-dark);
+  outline-offset: 2px;
+}
+
+.skip-link:focus,
+.skip-link:focus-visible,
+.site-nav a:focus-visible,
+.site-nav button:focus-visible,
+.app-footer a:focus-visible {
+  outline: 3px solid var(--focus);
   outline-offset: 2px;
 }
 
