@@ -9,9 +9,11 @@ import { FieldEditor } from './FieldEditor';
 export function SectionEditor({
   section,
   defaultOpen,
+  previewPath,
 }: {
   section: SectionConfig;
   defaultOpen?: boolean;
+  previewPath: 'public' | 'provider';
 }) {
   const { setSectionOverride, resetSection, isSectionModified } = useConfig();
   const modified = isSectionModified(section.id);
@@ -60,7 +62,7 @@ export function SectionEditor({
         </div>
 
         {section.fields.map((field) => (
-          <FieldEditor key={field.id} field={field} />
+          <FieldEditor key={field.id} field={field} previewPath={previewPath} />
         ))}
       </div>
     </details>

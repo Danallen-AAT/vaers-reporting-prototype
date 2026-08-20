@@ -40,6 +40,49 @@ describe('admin config surface', () => {
     expect(within(preview).queryByLabelText(/reporter name/i)).not.toBeInTheDocument();
   });
 
+  it('tells the author which inputs drive the path being previewed', async () => {
+    // Regression: the editor list is identical for both reporter paths, so an
+    // author previewing the provider path could edit the public label, see the
+    // preview not move, and conclude the editor was broken.
+    const user = userEvent.setup();
+    renderAdmin();
+
+    const rowFor = (label: string) =>
+      screen.getByLabelText(label).closest('.fe-row') as HTMLElement;
+
+    // Provider preview: the clinical label is the live one.
+    await user.click(screen.getByRole('button', { name: 'Provider' }));
+    expect(within(rowFor('Label for reporterName')).getByText(/in preview/i)).toBeInTheDocument();
+    expect(
+      within(rowFor('Public label for reporterName')).queryByText(/in preview/i),
+    ).not.toBeInTheDocument();
+
+    // Public preview: the marker moves to the public label.
+    await user.click(screen.getByRole('button', { name: 'Public' }));
+    expect(
+      within(rowFor('Public label for reporterName')).getByText(/in preview/i),
+    ).toBeInTheDocument();
+  }, 30000);
+
+  it('marks fields that do not appear in the previewed path', async () => {
+    const user = userEvent.setup();
+    renderAdmin();
+
+    // relationToPatient is public-only, so it is not in the provider preview.
+    await user.click(screen.getByRole('button', { name: 'Provider' }));
+    const card = screen
+      .getByLabelText('Label for relationToPatient')
+      .closest('.field-editor') as HTMLElement;
+    expect(card).toHaveClass('out-of-view');
+    expect(within(card).getByText(/not shown in the provider preview/i)).toBeInTheDocument();
+
+    // It is in view on the public path.
+    await user.click(screen.getByRole('button', { name: 'Public' }));
+    expect(
+      screen.getByLabelText('Label for relationToPatient').closest('.field-editor'),
+    ).not.toHaveClass('out-of-view');
+  }, 30000);
+
   it('resets all customizations back to defaults', async () => {
     const user = userEvent.setup();
     renderAdmin();

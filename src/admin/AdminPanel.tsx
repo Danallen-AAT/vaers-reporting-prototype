@@ -62,9 +62,22 @@ export function AdminPanel({ onSignOut }: { onSignOut?: () => void }) {
 
       <div className="wrap admin-layout">
         <div className="admin-editor">
-          <h2 className="admin-col-title">Content</h2>
+          <div className="editor-head">
+            <h2 className="admin-col-title">Content</h2>
+            <p className="editor-context" role="status">
+              Editing for the{' '}
+              <strong>{previewPath === 'public' ? 'public' : 'healthcare provider'}</strong> view.
+              Inputs marked <span className="live-dot">in preview</span> are the ones showing on the
+              right.
+            </p>
+          </div>
           {config.sections.map((section, i) => (
-            <SectionEditor key={section.id} section={section} defaultOpen={i === 0} />
+            <SectionEditor
+              key={section.id}
+              section={section}
+              defaultOpen={i === 0}
+              previewPath={previewPath}
+            />
           ))}
           <FaqEditor />
         </div>

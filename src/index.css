@@ -610,6 +610,62 @@ textarea.fe-input {
   margin-top: 0.35rem;
 }
 
+/* Editor path awareness. The editor list is identical for both reporter
+   paths, so these markers tell the author which inputs actually drive the
+   preview they are looking at. */
+.editor-head {
+  margin-bottom: 0.85rem;
+}
+.editor-context {
+  margin: 0.15rem 0 0;
+  font-size: 0.86rem;
+  color: var(--ink-muted);
+  line-height: 1.5;
+}
+.live-dot {
+  display: inline-block;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 0.08rem 0.4rem;
+  margin-left: 0.35rem;
+  border-radius: 3px;
+  background: #e4f0e9;
+  color: #2c6a4c;
+  border: 1px solid #9ac4ae;
+  vertical-align: 1px;
+}
+.badge-path {
+  background: var(--surface-2, #eef0f2);
+  color: var(--ink-muted);
+  border: 1px solid #d6d9dc;
+  font-weight: 600;
+}
+.badge-path.path-public {
+  background: #eaf1f8;
+  color: var(--primary-dark);
+  border-color: #a9cbe8;
+}
+.badge-path.path-provider {
+  background: #f3eaf6;
+  color: #6b3b7a;
+  border-color: #cfb3d8;
+}
+.field-editor.out-of-view {
+  opacity: 0.55;
+  background: #fafbfc;
+}
+.field-editor.out-of-view:focus-within {
+  opacity: 1;
+}
+.fe-outnote {
+  margin: 0.15rem 0 0.6rem 0.35rem;
+  font-size: 0.82rem;
+  color: var(--ink-muted);
+  font-style: italic;
+}
+
 /* Live preview pane */
 .preview-head {
   display: flex;

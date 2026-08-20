@@ -1,7 +1,11 @@
 // ---------------------------------------------------------------------------
 // Per-field editor. A CDC program person edits wording/requiredness here; the
 // change flows into the config store and the live preview re-renders at once.
-// Inputs carry per-field aria-labels so each control is uniquely addressable.
+//
+// The editor is aware of which reporter path is being previewed. Without that,
+// an author previewing the provider path can edit the public label, see nothing
+// happen, and reasonably conclude the editor is broken. Nothing is hidden;
+// fields and inputs that do not affect the current preview are marked instead.
 // ---------------------------------------------------------------------------
 import type { FieldConfig, RequiredRule } from '../config/types';
 import { useConfig } from '../state/ConfigStore';
@@ -13,22 +17,54 @@ function fromRequiredValue(v: string): RequiredRule {
   return v === 'required' ? true : v === 'conditional' ? 'conditional' : false;
 }
 
-export function FieldEditor({ field }: { field: FieldConfig }) {
+const PATH_LABEL: Record<string, string> = {
+  both: 'Both paths',
+  public: 'Public only',
+  provider: 'Provider only',
+};
+
+export function FieldEditor({
+  field,
+  previewPath,
+}: {
+  field: FieldConfig;
+  previewPath: 'public' | 'provider';
+}) {
   const { setFieldOverride, resetField, isFieldModified } = useConfig();
   const modified = isFieldModified(field.id);
   const showPublic = field.path !== 'provider';
 
+  // Does this field appear at all in the path currently being previewed?
+  const inPreview = field.path === 'both' || field.path === previewPath;
+
+  // Which wording is actually rendered right now. On the public path the
+  // renderer falls back to the clinical label when no public variant is set.
+  const publicLabelIsLive = previewPath === 'public' && Boolean(field.publicLabel);
+  const publicHelpIsLive = previewPath === 'public' && Boolean(field.publicHelpText);
+
+  const liveMark = (isLive: boolean) =>
+    inPreview && isLive ? <span className="live-dot" title="Showing in the preview">in preview</span> : null;
+
   return (
-    <fieldset className="field-editor">
+    <fieldset className={`field-editor${inPreview ? '' : ' out-of-view'}`}>
       <legend className="fe-legend">
         <span className="fe-title">{field.label || '(no label)'}</span>
         <code className="fe-id">{field.id}</code>
+        <span className={`badge badge-path path-${field.path}`}>{PATH_LABEL[field.path]}</span>
         {modified && <span className="badge badge-mod">Modified</span>}
       </legend>
 
+      {!inPreview && (
+        <p className="fe-outnote">
+          Not shown in the {previewPath === 'public' ? 'public' : 'provider'} preview. Still editable.
+        </p>
+      )}
+
       <div className="fe-grid">
         <label className="fe-row">
-          <span className="fe-cap">Label</span>
+          <span className="fe-cap">
+            Label {liveMark(!publicLabelIsLive)}
+          </span>
           <input
             className="fe-input"
             aria-label={`Label for ${field.id}`}
@@ -39,7 +75,9 @@ export function FieldEditor({ field }: { field: FieldConfig }) {
 
         {showPublic && (
           <label className="fe-row">
-            <span className="fe-cap">Public label</span>
+            <span className="fe-cap">
+              Public label {liveMark(publicLabelIsLive)}
+            </span>
             <input
               className="fe-input"
               aria-label={`Public label for ${field.id}`}
@@ -51,7 +89,9 @@ export function FieldEditor({ field }: { field: FieldConfig }) {
         )}
 
         <label className="fe-row">
-          <span className="fe-cap">Help text</span>
+          <span className="fe-cap">
+            Help text {liveMark(!publicHelpIsLive && Boolean(field.helpText))}
+          </span>
           <input
             className="fe-input"
             aria-label={`Help text for ${field.id}`}
@@ -63,7 +103,9 @@ export function FieldEditor({ field }: { field: FieldConfig }) {
 
         {showPublic && (
           <label className="fe-row">
-            <span className="fe-cap">Public help text</span>
+            <span className="fe-cap">
+              Public help text {liveMark(publicHelpIsLive)}
+            </span>
             <input
               className="fe-input"
               aria-label={`Public help text for ${field.id}`}
