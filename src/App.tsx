@@ -3,6 +3,7 @@ import { FormView } from './components/FormView';
 import { LandingView } from './components/LandingView';
 import { AdminView } from './admin/AdminView';
 import { useHashRoute } from './hooks/useHashRoute';
+import { handleJump } from './lib/inPageJump';
 
 function SiteNav({ route }: { route: string }) {
   return (
@@ -32,7 +33,10 @@ export default function App() {
 
   return (
     <ConfigProvider>
-      <a className="skip-link" href="#main">
+      {/* The navigation is cancelled deliberately. A bare href="#main" sets the
+          routing hash to "main", which matches no route, so the skip link used
+          to send the user to the landing page instead of the main region. */}
+      <a className="skip-link" href="#main" onClick={handleJump('main')}>
         Skip to main content
       </a>
       <SiteNav route={route} />

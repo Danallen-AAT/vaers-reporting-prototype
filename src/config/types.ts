@@ -64,10 +64,20 @@ export interface FieldConfig {
   required?: RequiredRule;
   options?: FieldOption[];
   placeholder?: string;
-  /** Contextual help / tooltip (clinical wording). */
+  /** Always-visible contextual help beneath the label (clinical wording). */
   helpText?: string;
   /** Plain-language help for the public path. Falls back to `helpText`. */
   publicHelpText?: string;
+  /**
+   * Supplementary detail behind a toggle next to the label (PWS 1.3 tooltips).
+   * Deliberately separate from `helpText`: help is the short guidance every
+   * reporter should see, the tooltip is the longer answer only some will want.
+   * Rendered as a keyboard-operable disclosure rather than a hover target, so
+   * it is reachable without a mouse and on touch devices.
+   */
+  tooltip?: string;
+  /** Plain-language tooltip for the public path. Falls back to `tooltip`. */
+  publicTooltip?: string;
   /** Field is shown only when ALL of these predicates hold. */
   visibleWhen?: Condition[];
   /** Field is hidden when ALL of these predicates hold (overrides visibleWhen). */

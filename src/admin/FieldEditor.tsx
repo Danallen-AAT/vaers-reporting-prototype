@@ -41,6 +41,7 @@ export function FieldEditor({
   // renderer falls back to the clinical label when no public variant is set.
   const publicLabelIsLive = previewPath === 'public' && Boolean(field.publicLabel);
   const publicHelpIsLive = previewPath === 'public' && Boolean(field.publicHelpText);
+  const publicTooltipIsLive = previewPath === 'public' && Boolean(field.publicTooltip);
 
   const liveMark = (isLive: boolean) =>
     inPreview && isLive ? <span className="live-dot" title="Showing in the preview">in preview</span> : null;
@@ -112,6 +113,34 @@ export function FieldEditor({
               placeholder="(uses the clinical help text)"
               value={field.publicHelpText ?? ''}
               onChange={(e) => setFieldOverride(field.id, { publicHelpText: e.target.value })}
+            />
+          </label>
+        )}
+
+        <label className="fe-row">
+          <span className="fe-cap">
+            Tooltip {liveMark(!publicTooltipIsLive && Boolean(field.tooltip))}
+          </span>
+          <input
+            className="fe-input"
+            aria-label={`Tooltip for ${field.id}`}
+            placeholder="(none)"
+            value={field.tooltip ?? ''}
+            onChange={(e) => setFieldOverride(field.id, { tooltip: e.target.value })}
+          />
+        </label>
+
+        {showPublic && (
+          <label className="fe-row">
+            <span className="fe-cap">
+              Public tooltip {liveMark(publicTooltipIsLive)}
+            </span>
+            <input
+              className="fe-input"
+              aria-label={`Public tooltip for ${field.id}`}
+              placeholder="(uses the clinical tooltip)"
+              value={field.publicTooltip ?? ''}
+              onChange={(e) => setFieldOverride(field.id, { publicTooltip: e.target.value })}
             />
           </label>
         )}

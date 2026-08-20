@@ -15,6 +15,8 @@ import { repeatFieldId, type FieldConfig, type SectionConfig } from '../config/t
 import { Field } from './Field';
 import { DocSuggestions } from './DocSuggestions';
 import { SurveyDialog } from './SurveyDialog';
+import { ProgressPanel } from './ProgressPanel';
+import { handleJump } from '../lib/inPageJump';
 
 export function FormRenderer() {
   const {
@@ -116,13 +118,18 @@ export function FormRenderer() {
         </div>
       )}
 
+      <ProgressPanel />
+
       {sections.map(({ section, fields, instances }) => {
         const title = isPublic && section.publicTitle ? section.publicTitle : section.title;
         const desc =
           isPublic && section.publicDescription ? section.publicDescription : section.description;
         return (
           <section className="form-section" key={section.id} aria-labelledby={`${section.id}-heading`}>
-            <h2 id={`${section.id}-heading`} className="section-title">
+            {/* tabIndex allows the completion-status control to move focus here,
+                so keyboard users travel with the scroll rather than being left
+                behind in the panel. */}
+            <h2 id={`${section.id}-heading`} className="section-title" tabIndex={-1}>
               {title}
             </h2>
             {desc && <p className="section-desc">{desc}</p>}
@@ -158,7 +165,11 @@ export function FormRenderer() {
                     const suffix = section.repeat ? ` (${section.repeat.itemLabel} ${i + 1})` : '';
                     return (
                       <li key={key}>
-                        <a href={`#${key}`}>
+                        {/* href is kept for link semantics and middle-click, but
+                            the navigation is cancelled: a bare fragment href
+                            would be read as a route and bounce the reporter to
+                            the landing page. See lib/inPageJump. */}
+                        <a href={`#${key}`} onClick={handleJump(key)}>
                           {labelOf(f)}
                           {suffix}: {errors[key]}
                         </a>

@@ -32,6 +32,8 @@ export interface FieldOverride {
   publicLabel?: string;
   helpText?: string;
   publicHelpText?: string;
+  tooltip?: string;
+  publicTooltip?: string;
   placeholder?: string;
   required?: RequiredRule;
 }
@@ -83,7 +85,15 @@ function requiredKey(r?: RequiredRule): 'required' | 'conditional' | 'optional' 
  */
 function normalizeFieldOverride(candidate: FieldOverride, base: FieldConfig): FieldOverride | null {
   const out: FieldOverride = {};
-  const textKeys = ['label', 'publicLabel', 'helpText', 'publicHelpText', 'placeholder'] as const;
+  const textKeys = [
+    'label',
+    'publicLabel',
+    'helpText',
+    'publicHelpText',
+    'tooltip',
+    'publicTooltip',
+    'placeholder',
+  ] as const;
   for (const k of textKeys) {
     const v = candidate[k];
     if (v === undefined) continue;

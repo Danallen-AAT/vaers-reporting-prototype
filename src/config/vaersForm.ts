@@ -144,6 +144,10 @@ export const vaersForm: FormConfig = {
           publicLabel: "Patient's date of birth",
           type: 'date',
           path: 'both',
+          tooltip:
+            'Used to derive age at vaccination and to identify duplicate reports. If only the year is known, use January 1 of that year and note the uncertainty in the description.',
+          publicTooltip:
+            'This helps match the report to the right person and works out how old they were when they got the shot. If you are reporting for yourself, this is your own date of birth.',
         },
         {
           id: 'patientSex',
@@ -224,6 +228,10 @@ export const vaersForm: FormConfig = {
           publicLabel: 'Lot number (on the card or record, if known)',
           type: 'text',
           path: 'both',
+          tooltip:
+            'Recorded on the vaccine vial and carried through to the administration record. Leave blank if it is not available; a report without a lot number is still accepted.',
+          publicTooltip:
+            'Look on your vaccination card or the printout you were given. It is usually a short mix of letters and numbers. If you cannot find it, leave it blank and carry on.',
         },
         {
           id: 'vaxDoseNum',
@@ -275,6 +283,10 @@ export const vaersForm: FormConfig = {
           type: 'date',
           path: 'both',
           required: true,
+          tooltip:
+            'The date the dose was administered, not the date the reaction began. Where the exact date is unavailable, give the closest known date rather than omitting the report.',
+          publicTooltip:
+            'The day you got the shot, not the day you started feeling unwell. If you are not sure of the exact day, your best estimate is fine.',
         },
       ],
     },
@@ -303,6 +315,8 @@ export const vaersForm: FormConfig = {
           path: 'provider',
           required: true,
           visibleWhen: IF_ADMIN_ERROR,
+          tooltip:
+            'Administration errors are reportable whether or not the patient came to any harm. Select every category that applies; where an error has more than one dimension, for example a wrong dose given by a wrong route, record both.',
           options: [
             { value: 'wrong_vaccine', label: 'Wrong vaccine' },
             { value: 'wrong_dose', label: 'Wrong dose / amount' },
@@ -377,6 +391,10 @@ export const vaersForm: FormConfig = {
           type: 'multiselect',
           path: 'both',
           required: true,
+          tooltip:
+            'These are the regulatory seriousness criteria. Any one of them marks the report as serious and changes how it is prioritised for review, so select every criterion that applies rather than only the most severe.',
+          publicTooltip:
+            'Tick everything that happened, even if you are not sure it was caused by the vaccine. Choosing more than one is normal, and it helps reviewers understand how severe things got.',
           options: [
             { value: 'died', label: 'Patient died' },
             { value: 'life_threatening', label: 'Life-threatening' },
@@ -493,6 +511,10 @@ export const vaersForm: FormConfig = {
           path: 'both',
           helpText:
             'Demonstration only. Files are not uploaded, stored, or transmitted. Do not attach real records.',
+          tooltip:
+            'Discharge summaries, clinic notes, laboratory results and imaging reports are the most useful supporting documents. Attaching them at submission avoids a follow-up request later.',
+          publicTooltip:
+            'Anything a doctor or hospital gave you about what happened is helpful, for example a discharge paper or test results. You do not have to attach anything to file a report.',
         },
         {
           id: 'freeText',

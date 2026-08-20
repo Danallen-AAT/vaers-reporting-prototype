@@ -71,6 +71,14 @@ describe('accessibility: public reporting form', () => {
     expect(await axe(container, AXE_OPTS)).toHaveNoViolations();
   }, 20000);
 
+  it('has no violations with a field tooltip revealed', async () => {
+    const user = userEvent.setup();
+    const { container } = render(<App />);
+    await user.click(screen.getByRole('radio', { name: 'Healthcare provider' }));
+    await user.click(screen.getByRole('button', { name: /more guidance for vaccination date/i }));
+    expect(await axe(container, AXE_OPTS)).toHaveNoViolations();
+  }, 20000);
+
   it('has no violations when the adverse event section is suppressed', async () => {
     const user = userEvent.setup();
     const { container } = render(<App />);
