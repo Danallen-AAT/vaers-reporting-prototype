@@ -30,6 +30,25 @@ const AXE_OPTS = {
 beforeEach(() => {
   localStorage.clear();
   sessionStorage.clear();
+  // The reporting form lives at #/report; #/ is now the landing page.
+  window.location.hash = '#/report';
+});
+
+describe('accessibility: landing page', () => {
+  it('has no violations on the landing page', async () => {
+    window.location.hash = '#/';
+    const { container } = render(<App />);
+    expect(await axe(container, AXE_OPTS)).toHaveNoViolations();
+  }, 20000);
+
+  it('has no violations with the site navigation survey open', async () => {
+    window.location.hash = '#/';
+    const user = userEvent.setup();
+    const { container } = render(<App />);
+    await user.click(screen.getByRole('button', { name: /give us feedback on this site/i }));
+    expect(await screen.findByRole('dialog')).toBeInTheDocument();
+    expect(await axe(container, AXE_OPTS)).toHaveNoViolations();
+  }, 25000);
 });
 
 describe('accessibility: public reporting form', () => {

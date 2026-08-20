@@ -185,8 +185,14 @@ export const vaersForm: FormConfig = {
       id: 'vaccines',
       title: 'Vaccine(s) administered',
       publicTitle: 'The vaccine',
-      description: 'Details of the vaccine that was given.',
+      description:
+        'Details of the vaccine that was given. Add another if more than one was given at the same visit.',
+      publicDescription:
+        'Details of the shot that was given. Add another if more than one was given at the same visit.',
       path: 'both',
+      // Several vaccines are commonly administered at one visit, so the whole
+      // group repeats rather than the reporter filing separate reports.
+      repeat: { min: 1, max: 6, itemLabel: 'Vaccine', addLabel: 'Add another vaccine' },
       fields: [
         {
           id: 'vaxType',
@@ -498,4 +504,71 @@ export const vaersForm: FormConfig = {
       ],
     },
   ],
+
+  // Two satisfaction instruments, defined as data so the admin surface can
+  // edit them the same way it edits the form (PWS 1.5 and 1.7).
+  surveys: {
+    siteNavigation: {
+      id: 'site-navigation',
+      title: 'How is this site working for you?',
+      intro: 'Two quick questions about finding your way around. Nothing is stored.',
+      thanks: 'Thank you. Feedback like this is what tells us which pages to fix first.',
+      questions: [
+        {
+          id: 'foundWhatINeeded',
+          label: 'Were you able to find what you were looking for?',
+          type: 'radio',
+          options: [
+            { value: 'yes', label: 'Yes' },
+            { value: 'partly', label: 'Partly' },
+            { value: 'no', label: 'No' },
+          ],
+        },
+        {
+          id: 'navEase',
+          label: 'How easy was it to get around the site?',
+          type: 'radio',
+          options: [
+            { value: '5', label: 'Very easy' },
+            { value: '4', label: 'Easy' },
+            { value: '3', label: 'Neither easy nor difficult' },
+            { value: '2', label: 'Difficult' },
+            { value: '1', label: 'Very difficult' },
+          ],
+        },
+        { id: 'navComment', label: 'What were you trying to do?', type: 'textarea' },
+      ],
+    },
+    postSubmission: {
+      id: 'post-submission',
+      title: 'How did that go?',
+      thanks:
+        'Thank you. Your feedback helps us improve this form. Nothing you entered has been stored.',
+      questions: [
+        {
+          id: 'ease',
+          label: 'How easy was it to complete this report?',
+          type: 'radio',
+          options: [
+            { value: '5', label: 'Very easy' },
+            { value: '4', label: 'Easy' },
+            { value: '3', label: 'Neither easy nor difficult' },
+            { value: '2', label: 'Difficult' },
+            { value: '1', label: 'Very difficult' },
+          ],
+        },
+        {
+          id: 'clarity',
+          label: 'Were the questions clear?',
+          type: 'radio',
+          options: [
+            { value: 'yes', label: 'Yes, they were clear' },
+            { value: 'mostly', label: 'Mostly clear' },
+            { value: 'no', label: 'No, some were confusing' },
+          ],
+        },
+        { id: 'comment', label: 'Anything we could improve?', type: 'textarea' },
+      ],
+    },
+  },
 };

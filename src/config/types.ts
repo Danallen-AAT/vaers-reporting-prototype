@@ -74,6 +74,22 @@ export interface FieldConfig {
   suppressWhen?: Condition[];
 }
 
+/**
+ * Marks a section as a repeatable group. A reporter can add more than one
+ * instance of the whole field set, which VAERS needs because several vaccines
+ * are commonly given at the same visit.
+ */
+export interface RepeatConfig {
+  /** Instances always present. At least one. */
+  min: number;
+  /** Upper bound, to keep the form finite. */
+  max: number;
+  /** Label for one instance, for example "Vaccine". */
+  itemLabel: string;
+  /** Text on the add control. */
+  addLabel: string;
+}
+
 export interface SectionConfig {
   id: string;
   title: string;
@@ -84,6 +100,24 @@ export interface SectionConfig {
   fields: FieldConfig[];
   visibleWhen?: Condition[];
   suppressWhen?: Condition[];
+  /** Present when the section can be repeated. */
+  repeat?: RepeatConfig;
+}
+
+/** A question on one of the satisfaction surveys. */
+export interface SurveyQuestion {
+  id: string;
+  label: string;
+  type: 'radio' | 'textarea';
+  options?: FieldOption[];
+}
+
+export interface SurveyConfig {
+  id: string;
+  title: string;
+  intro?: string;
+  thanks: string;
+  questions: SurveyQuestion[];
 }
 
 export interface FormConfig {
@@ -91,6 +125,21 @@ export interface FormConfig {
   title: string;
   intro?: string;
   sections: SectionConfig[];
+  /** Both satisfaction instruments, keyed by where they are used. */
+  surveys: {
+    siteNavigation: SurveyConfig;
+    postSubmission: SurveyConfig;
+  };
+}
+
+/** Values for a repeated section are stored per instance under this key. */
+export function repeatFieldId(fieldId: string, instance: number): string {
+  return instance === 0 ? fieldId : `${fieldId}__${instance}`;
+}
+
+/** How many instances of a repeatable section are currently present. */
+export function repeatCountKey(sectionId: string): string {
+  return `__repeat__${sectionId}`;
 }
 
 /** The user's answers, keyed by field id. */

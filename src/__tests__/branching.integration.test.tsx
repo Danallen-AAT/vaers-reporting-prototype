@@ -2,10 +2,16 @@
 // UI integration for PRS#1 - drives the real components the way a user would
 // and asserts the marquee suppression + the public plain-language path.
 // ---------------------------------------------------------------------------
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import App from '../App';
+
+beforeEach(() => {
+  localStorage.clear();
+  // The reporting form lives at #/report; #/ is the landing page.
+  window.location.hash = '#/report';
+});
 
 describe('branching (UI integration)', () => {
   it('provider: admin error with NO adverse event suppresses the AE section', async () => {

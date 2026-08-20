@@ -1,10 +1,10 @@
 import { ConfigProvider } from './state/ConfigStore';
 import { FormView } from './components/FormView';
+import { LandingView } from './components/LandingView';
 import { AdminView } from './admin/AdminView';
 import { useHashRoute } from './hooks/useHashRoute';
 
 function SiteNav({ route }: { route: string }) {
-  const isAdmin = route === 'admin';
   return (
     <header className="site-nav">
       <div className="wrap nav-inner">
@@ -12,10 +12,13 @@ function SiteNav({ route }: { route: string }) {
           VAERS <span>· CDC reporting prototype</span>
         </a>
         <nav aria-label="Primary">
-          <a href="#/" aria-current={isAdmin ? undefined : 'page'}>
+          <a href="#/" aria-current={route === '' ? 'page' : undefined}>
+            Home
+          </a>
+          <a href="#/report" aria-current={route === 'report' ? 'page' : undefined}>
             Report
           </a>
-          <a href="#/admin" aria-current={isAdmin ? 'page' : undefined}>
+          <a href="#/admin" aria-current={route === 'admin' ? 'page' : undefined}>
             Admin
           </a>
         </nav>
@@ -34,7 +37,13 @@ export default function App() {
       </a>
       <SiteNav route={route} />
 
-      {route === 'admin' ? <AdminView /> : <FormView />}
+      {route === 'admin' ? (
+        <AdminView />
+      ) : route === 'report' ? (
+        <FormView />
+      ) : (
+        <LandingView />
+      )}
 
       <footer className="app-footer">
         <div className="wrap">

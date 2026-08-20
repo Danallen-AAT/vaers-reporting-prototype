@@ -2,7 +2,7 @@
 // Validation - only ever applied to currently-visible fields, so a suppressed
 // branch (e.g. the hidden Adverse Event section) never blocks submission.
 // ---------------------------------------------------------------------------
-import type { FieldConfig, FormConfig, FormValues } from '../config/types';
+import { repeatFieldId, type FieldConfig, type FormConfig, type FormValues } from '../config/types';
 import { getVisibleForm } from './visibility';
 
 export type Errors = Record<string, string>;
@@ -20,8 +20,12 @@ function isBlank(v: unknown): boolean {
   return false;
 }
 
-export function validateField(field: FieldConfig, values: FormValues): string | undefined {
-  const value = values[field.id];
+export function validateField(
+  field: FieldConfig,
+  values: FormValues,
+  instance = 0,
+): string | undefined {
+  const value = values[repeatFieldId(field.id, instance)];
 
   if (isRequired(field) && isBlank(value)) {
     return 'This field is required.';
@@ -37,13 +41,19 @@ export function validateField(field: FieldConfig, values: FormValues): string | 
   return undefined;
 }
 
-/** Validate every visible field; returns a map of fieldId -> message. */
+/**
+ * Validate every visible field, across every instance of a repeated section.
+ * Error keys use the same instance-aware id as the inputs, so a message always
+ * lands on the control that produced it.
+ */
 export function validateForm(config: FormConfig, values: FormValues): Errors {
   const errors: Errors = {};
-  for (const { fields } of getVisibleForm(config, values)) {
-    for (const field of fields) {
-      const err = validateField(field, values);
-      if (err) errors[field.id] = err;
+  for (const { fields, instances } of getVisibleForm(config, values)) {
+    for (let i = 0; i < instances; i++) {
+      for (const field of fields) {
+        const err = validateField(field, values, i);
+        if (err) errors[repeatFieldId(field.id, i)] = err;
+      }
     }
   }
   return errors;

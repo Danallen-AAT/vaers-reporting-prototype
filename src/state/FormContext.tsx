@@ -11,8 +11,14 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import type { FormConfig, FormValues } from '../config/types';
-import { getReporterPath, type ActivePath } from '../formEngine/visibility';
+import {
+  repeatCountKey,
+  repeatFieldId,
+  type FormConfig,
+  type FormValues,
+  type SectionConfig,
+} from '../config/types';
+import { getReporterPath, getRepeatCount, type ActivePath } from '../formEngine/visibility';
 import { validateForm, type Errors } from '../formEngine/validation';
 
 interface FormContextValue {
@@ -22,6 +28,8 @@ interface FormContextValue {
   activePath: ActivePath;
   submitted: boolean;
   setValue: (id: string, value: FormValues[string]) => void;
+  addInstance: (section: SectionConfig) => void;
+  removeInstance: (section: SectionConfig, instance: number) => void;
   validate: () => boolean;
   reset: () => void;
 }
@@ -58,6 +66,39 @@ export function FormProvider({
     if (submitted) setErrors(validateForm(config, values));
   }, [values, submitted, config]);
 
+  const addInstance = (section: SectionConfig) => {
+    if (!section.repeat) return;
+    setValues((prev) => {
+      const next = getRepeatCount(section, prev) + 1;
+      if (next > section.repeat!.max) return prev;
+      return { ...prev, [repeatCountKey(section.id)]: String(next) };
+    });
+  };
+
+  /**
+   * Remove one instance and close the gap, so instance ids stay contiguous.
+   * Values above the removed index shift down rather than leaving a hole.
+   */
+  const removeInstance = (section: SectionConfig, instance: number) => {
+    if (!section.repeat) return;
+    setValues((prev) => {
+      const count = getRepeatCount(section, prev);
+      if (count <= section.repeat!.min) return prev;
+      const next = { ...prev };
+      for (let i = instance; i < count - 1; i++) {
+        for (const f of section.fields) {
+          const here = repeatFieldId(f.id, i);
+          const below = repeatFieldId(f.id, i + 1);
+          if (below in next) next[here] = next[below];
+          else delete next[here];
+        }
+      }
+      for (const f of section.fields) delete next[repeatFieldId(f.id, count - 1)];
+      next[repeatCountKey(section.id)] = String(count - 1);
+      return next;
+    });
+  };
+
   const validate = () => {
     const e = validateForm(config, values);
     setErrors(e);
@@ -80,6 +121,8 @@ export function FormProvider({
     activePath,
     submitted,
     setValue,
+    addInstance,
+    removeInstance,
     validate,
     reset,
   };

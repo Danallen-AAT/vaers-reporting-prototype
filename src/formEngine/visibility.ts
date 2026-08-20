@@ -2,13 +2,14 @@
 // Branching engine (PRS#1). Pure functions over (config, values) - no React -
 // so the exact field presentation/suppression can be unit-tested in isolation.
 // ---------------------------------------------------------------------------
-import type {
-  Condition,
-  FieldConfig,
-  FormConfig,
-  FormValues,
-  ReporterPath,
-  SectionConfig,
+import {
+  repeatCountKey,
+  type Condition,
+  type FieldConfig,
+  type FormConfig,
+  type FormValues,
+  type ReporterPath,
+  type SectionConfig,
 } from '../config/types';
 
 export type ActivePath = 'public' | 'provider' | undefined;
@@ -77,6 +78,20 @@ export function isSectionVisible(section: SectionConfig, values: FormValues): bo
 export interface ResolvedSection {
   section: SectionConfig;
   fields: FieldConfig[];
+  /** Instances to render. Always 1 for a section that does not repeat. */
+  instances: number;
+}
+
+/**
+ * How many instances of a repeatable section are present, clamped to the
+ * configured bounds. Sections that do not repeat always return 1.
+ */
+export function getRepeatCount(section: SectionConfig, values: FormValues): number {
+  if (!section.repeat) return 1;
+  const raw = values[repeatCountKey(section.id)];
+  const n = typeof raw === 'string' ? parseInt(raw, 10) : NaN;
+  if (Number.isNaN(n)) return section.repeat.min;
+  return Math.min(Math.max(n, section.repeat.min), section.repeat.max);
 }
 
 /** The sections and fields to render right now, in config order. */
@@ -85,7 +100,9 @@ export function getVisibleForm(config: FormConfig, values: FormValues): Resolved
   for (const section of config.sections) {
     if (!isSectionVisible(section, values)) continue;
     const fields = section.fields.filter((f) => isFieldVisible(f, values));
-    if (fields.length > 0) out.push({ section, fields });
+    if (fields.length > 0) {
+      out.push({ section, fields, instances: getRepeatCount(section, values) });
+    }
   }
   return out;
 }

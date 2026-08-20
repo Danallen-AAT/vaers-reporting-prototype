@@ -3,7 +3,7 @@
 // from here - labels/help swap to plain language on the public path, groups use
 // <fieldset>/<legend>, and errors are wired via aria-describedby / aria-invalid.
 // ---------------------------------------------------------------------------
-import type { FieldConfig } from '../config/types';
+import { repeatFieldId, type FieldConfig } from '../config/types';
 import { useForm } from '../state/FormContext';
 
 function labelFor(field: FieldConfig, isPublic: boolean): string {
@@ -14,18 +14,21 @@ function helpFor(field: FieldConfig, isPublic: boolean): string | undefined {
   return isPublic && field.publicHelpText ? field.publicHelpText : field.helpText;
 }
 
-export function Field({ field }: { field: FieldConfig }) {
+export function Field({ field, instance = 0 }: { field: FieldConfig; instance?: number }) {
   const { values, errors, setValue, activePath } = useForm();
   const isPublic = activePath === 'public';
 
-  const value = values[field.id];
-  const error = errors[field.id];
+  // Repeated sections store each instance under its own key, so the DOM id,
+  // the value, the error and every aria reference all use the same id.
+  const key = repeatFieldId(field.id, instance);
+  const value = values[key];
+  const error = errors[key];
   const label = labelFor(field, isPublic);
   const help = helpFor(field, isPublic);
   const required = field.required === true || field.required === 'conditional';
 
-  const helpId = help ? `${field.id}-help` : undefined;
-  const errorId = error ? `${field.id}-error` : undefined;
+  const helpId = help ? `${key}-help` : undefined;
+  const errorId = error ? `${key}-error` : undefined;
   const describedBy = [helpId, errorId].filter(Boolean).join(' ') || undefined;
 
   const requiredMark = required ? (
@@ -56,7 +59,7 @@ export function Field({ field }: { field: FieldConfig }) {
     return (
       <fieldset
         className="field field-group"
-        id={field.id}
+        id={key}
         aria-describedby={describedBy}
         aria-invalid={error ? true : undefined}
       >
@@ -67,17 +70,17 @@ export function Field({ field }: { field: FieldConfig }) {
         {helpNode}
         <div className="options">
           {field.options?.map((opt) => {
-            const optId = `${field.id}-${opt.value}`;
+            const optId = `${key}-${opt.value}`;
             if (field.type === 'radio') {
               return (
                 <label className="option" key={opt.value} htmlFor={optId}>
                   <input
                     type="radio"
                     id={optId}
-                    name={field.id}
+                    name={key}
                     value={opt.value}
                     checked={value === opt.value}
-                    onChange={() => setValue(field.id, opt.value)}
+                    onChange={() => setValue(key, opt.value)}
                   />
                   <span>{opt.label}</span>
                 </label>
@@ -89,14 +92,14 @@ export function Field({ field }: { field: FieldConfig }) {
                 <input
                   type="checkbox"
                   id={optId}
-                  name={field.id}
+                  name={key}
                   value={opt.value}
                   checked={checked}
                   onChange={(e) => {
                     const next = e.target.checked
                       ? [...selected, opt.value]
                       : selected.filter((v) => v !== opt.value);
-                    setValue(field.id, next);
+                    setValue(key, next);
                   }}
                 />
                 <span>{opt.label}</span>
@@ -111,8 +114,8 @@ export function Field({ field }: { field: FieldConfig }) {
 
   // --- Single-control inputs -----------------------------------------------
   const commonProps = {
-    id: field.id,
-    name: field.id,
+    id: key,
+    name: key,
     'aria-describedby': describedBy,
     'aria-invalid': error ? true : undefined,
     'aria-required': required || undefined,
@@ -128,7 +131,7 @@ export function Field({ field }: { field: FieldConfig }) {
           rows={4}
           placeholder={field.placeholder}
           value={typeof value === 'string' ? value : ''}
-          onChange={(e) => setValue(field.id, e.target.value)}
+          onChange={(e) => setValue(key, e.target.value)}
         />
       );
       break;
@@ -138,7 +141,7 @@ export function Field({ field }: { field: FieldConfig }) {
           {...commonProps}
           className="input"
           value={typeof value === 'string' ? value : ''}
-          onChange={(e) => setValue(field.id, e.target.value)}
+          onChange={(e) => setValue(key, e.target.value)}
         >
           <option value="">Select one</option>
           {field.options?.map((opt) => (
@@ -155,7 +158,7 @@ export function Field({ field }: { field: FieldConfig }) {
           {...commonProps}
           className="input"
           type="file"
-          onChange={(e) => setValue(field.id, e.target.files?.[0]?.name ?? '')}
+          onChange={(e) => setValue(key, e.target.files?.[0]?.name ?? '')}
         />
       );
       break;
@@ -163,12 +166,12 @@ export function Field({ field }: { field: FieldConfig }) {
       // Single boolean checkbox.
       return (
         <div className="field field-inline">
-          <label className="option" htmlFor={field.id}>
+          <label className="option" htmlFor={key}>
             <input
               {...commonProps}
               type="checkbox"
               checked={value === true}
-              onChange={(e) => setValue(field.id, e.target.checked)}
+              onChange={(e) => setValue(key, e.target.checked)}
             />
             <span>
               {label}
@@ -198,7 +201,7 @@ export function Field({ field }: { field: FieldConfig }) {
           min={field.type === 'number' ? 0 : undefined}
           placeholder={field.placeholder}
           value={typeof value === 'string' ? value : ''}
-          onChange={(e) => setValue(field.id, e.target.value)}
+          onChange={(e) => setValue(key, e.target.value)}
         />
       );
     }
@@ -206,7 +209,7 @@ export function Field({ field }: { field: FieldConfig }) {
 
   return (
     <div className="field">
-      <label className="field-label" htmlFor={field.id}>
+      <label className="field-label" htmlFor={key}>
         {label}
         {requiredMark}
       </label>
