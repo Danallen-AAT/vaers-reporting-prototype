@@ -49,6 +49,9 @@ const AE_SUPPRESSED = [
 
 const IF_ADMIN_ERROR = [{ field: 'isAdminError', equals: 'yes' }];
 
+/** Pregnancy follow-ups, revealed in place rather than cross-referenced. */
+const IF_PREGNANT = [{ field: 'patientPregnant', equals: 'yes' }];
+
 export const vaersForm: FormConfig = {
   version: '2.0-proto',
   title: 'Report a problem after a vaccine (VAERS)',
@@ -169,6 +172,45 @@ export const vaersForm: FormConfig = {
           type: 'select',
           path: 'both',
           options: US_STATES,
+        },
+        // Item 8 on the current VAERS form, and the clearest demonstration of
+        // what branching replaces. The live form asks this, then instructs the
+        // reporter to "describe the event, any pregnancy complications, and
+        // estimated due date if known in item 18", making a person carry an
+        // answer to a numbered box further down the page. Here, answering yes
+        // reveals the fields instead.
+        {
+          id: 'patientPregnant',
+          label: 'Pregnant at time of vaccination?',
+          publicLabel: 'Was the patient pregnant when they got the shot?',
+          type: 'radio',
+          path: 'both',
+          options: YES_NO_UNKNOWN,
+          tooltip:
+            'Recorded for every report regardless of the reported event, because pregnancy exposure is tracked separately. Answering yes opens the related questions rather than directing you elsewhere on the form.',
+          publicTooltip:
+            'We ask this on every report. If the answer is yes, a couple of extra questions will appear right here.',
+        },
+        {
+          id: 'pregnancyDueDate',
+          label: 'Estimated due date',
+          publicLabel: 'When was the baby due?',
+          type: 'date',
+          path: 'both',
+          visibleWhen: IF_PREGNANT,
+          helpText: 'If known. An approximate date is acceptable.',
+        },
+        {
+          id: 'pregnancyComplications',
+          label: 'Pregnancy complications',
+          publicLabel: 'Any problems with the pregnancy?',
+          type: 'textarea',
+          path: 'both',
+          visibleWhen: IF_PREGNANT,
+          helpText:
+            'Complications observed during or following the pregnancy, and the outcome if known.',
+          publicHelpText:
+            'Anything that went wrong during or after the pregnancy, and how it turned out if you know.',
         },
         {
           id: 'patientRecovered',
