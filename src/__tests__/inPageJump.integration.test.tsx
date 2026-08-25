@@ -95,7 +95,7 @@ describe('skip link', () => {
 describe('no bare fragment anchors anywhere', () => {
   // The router owns location.hash. A fragment anchor without a click handler
   // that cancels it is a navigation bug waiting to be reported.
-  const ROUTES = new Set(['#/', '#/report', '#/admin']);
+  const ROUTES = new Set(['#/', '#/report', '#/admin', '#/about']);
 
   const auditCurrentDom = () =>
     [...document.querySelectorAll('a[href^="#"]')]

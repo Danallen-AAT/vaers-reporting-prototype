@@ -1,6 +1,7 @@
 import { ConfigProvider } from './state/ConfigStore';
 import { FormView } from './components/FormView';
 import { LandingView } from './components/LandingView';
+import { AboutView } from './components/AboutView';
 import { AdminView } from './admin/AdminView';
 import { useHashRoute } from './hooks/useHashRoute';
 import { handleJump } from './lib/inPageJump';
@@ -21,6 +22,9 @@ function SiteNav({ route }: { route: string }) {
           </a>
           <a href="#/admin" aria-current={route === 'admin' ? 'page' : undefined}>
             Admin
+          </a>
+          <a href="#/about" aria-current={route === 'about' ? 'page' : undefined}>
+            How it works
           </a>
         </nav>
       </div>
@@ -43,6 +47,8 @@ export default function App() {
 
       {route === 'admin' ? (
         <AdminView />
+      ) : route === 'about' ? (
+        <AboutView />
       ) : route === 'report' ? (
         <FormView />
       ) : (
