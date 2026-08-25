@@ -78,6 +78,22 @@ export interface FieldConfig {
   tooltip?: string;
   /** Plain-language tooltip for the public path. Falls back to `tooltip`. */
   publicTooltip?: string;
+  /**
+   * The VAERS data element this field maps to in the Government's target
+   * schema, for example `VAX_LOT`.
+   *
+   * Deliberately empty in the prototype. PWS Section 9 states that CDC
+   * furnishes the authoritative data element definitions, business rules, and
+   * integration requirements at kickoff, so the target names do not exist yet.
+   * The seam is built now so that populating it later is a configuration
+   * change in one place rather than a rework of the output layer (PWS 1.9).
+   *
+   * Unlike `label` and `helpText`, this is *structure*, not presentation. It is
+   * not editable from the low-code admin surface, which under PWS 1.8 covers
+   * content and interface only. Changing a mapping is a developer action under
+   * change control, because it moves where an answer lands in the database.
+   */
+  vaersElement?: string;
   /** Field is shown only when ALL of these predicates hold. */
   visibleWhen?: Condition[];
   /** Field is hidden when ALL of these predicates hold (overrides visibleWhen). */
