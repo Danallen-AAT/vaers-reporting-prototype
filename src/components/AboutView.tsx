@@ -157,9 +157,11 @@ publicLabel: 'Lot number on the vaccine record'  // public`}
             accessibility.</li>
           <li><strong>Behavioural verification driving a real browser.</strong> 21 of 21 checks
             passed, exercising actual key events rather than inspecting markup.</li>
-          <li><strong>Performance, measured on the deployed build with a cold cache.</strong> 0.41
-            seconds on broadband and 0.82 seconds on throttled 3G with a 4x CPU slowdown, across 4
-            requests and 82 kilobytes. The requirement is 3 seconds.</li>
+          <li><strong>Performance, measured on the deployed build with a cold cache.</strong> 0.42
+            seconds on broadband and 0.84 seconds on Fast 3G with a 4x CPU slowdown, across 4
+            requests and 86 kilobytes. The requirement is 3 seconds. The measurement script is in
+            the repository at <code>verification/perf.mjs</code>, so the figure can be re-run
+            rather than taken on trust.</li>
           <li><strong>Accessibility.</strong> Zero automated violations across eleven interface
             states. An Accessibility Conformance Report accompanies the quotation.</li>
           <li><strong>Configuration cannot inject markup.</strong> A payload combining an element

@@ -196,9 +196,11 @@ export function FormRenderer() {
             Structured output (VAERS-compatible)
           </h2>
           <p className="section-desc">
-            On submit the form emits clean structured JSON mapped to VAERS data
-            elements, demonstrating integration-readiness. Nothing is stored or
-            transmitted in this prototype.
+            On submit the form emits clean structured JSON through one isolated
+            mapping layer. Element-level names await the VAERS data element
+            definitions CDC furnishes at kickoff, and the meta block below
+            reports that mapping status openly (see How it works). Nothing is
+            stored or transmitted in this prototype.
           </p>
           <div className="form-actions output-actions">
             <button type="button" className="btn btn-outline" onClick={downloadOutput}>

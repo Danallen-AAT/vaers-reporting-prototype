@@ -1278,6 +1278,10 @@ legend.field-label .tip-toggle {
 @media (max-width: 40rem) {
   .progress-panel {
     padding: 0.7rem 0.9rem 0.75rem;
+    /* The chip row below scrolls internally. Without this, Chrome propagates
+       the row's full scrollable width into the sticky panel's layout overflow,
+       and the whole document gains 240px of sideways scroll on a handset. */
+    overflow-x: clip;
   }
   .progress-list {
     flex-wrap: nowrap;
