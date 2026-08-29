@@ -1418,3 +1418,43 @@ legend.field-label .tip-toggle {
     width: auto;
   }
 }
+
+/* --- Review stage (SC 3.3.4): the pause between filling and final --------- */
+.review-stage {
+  margin-top: 1.5rem;
+  border: 1px solid #b6c2ce;
+  border-left: 4px solid var(--primary-darker);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 1rem 1.25rem 1.25rem;
+}
+.review-stage:focus {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+.review-list {
+  margin: 0.75rem 0 1rem;
+  display: grid;
+  gap: 0.35rem;
+}
+.review-row {
+  display: grid;
+  grid-template-columns: minmax(10rem, 18rem) 1fr;
+  gap: 0.75rem;
+  padding: 0.3rem 0;
+  border-bottom: 1px solid #e6e8ea;
+}
+.review-row dt {
+  font-weight: 600;
+  color: var(--ink);
+}
+.review-row dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 34rem) {
+  .review-row {
+    grid-template-columns: 1fr;
+    gap: 0.1rem;
+  }
+}

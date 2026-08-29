@@ -124,34 +124,38 @@ publicLabel: 'Lot number on the vaccine record'  // public`}
         </p>
       </Section>
 
-      <Section id="mapping" title="The mapping boundary, and why it is empty">
+      <Section id="mapping" title="The mapping boundary, and what it maps today">
         <p>
           Every field can carry the VAERS data element it maps to. On submission, one isolated
           layer assembles the structured output, keying each answer on that element.
         </p>
         <p>
-          <strong>No field carries one yet, deliberately.</strong> PWS Section 9 states that CDC
-          furnishes the authoritative data element definitions, business rules and integration
-          requirements at kickoff. Those names do not exist outside CDC today, and inventing them
-          would be guessing.
+          <strong>Every field with a counterpart on the published VAERS 2.0 form carries a
+          representative element today</strong>, keyed to that form's own item numbers (item 8
+          pregnancy status, item 17 vaccine table, item 18 event description, and so on), because
+          PWS 1.6 makes the current form the authoritative element list. Fields born of the
+          modernized workflow, the administration error branch and the upload, deliberately carry
+          none: PWS Section 9 states that CDC furnishes the authoritative data element definitions,
+          business rules and integration requirements at kickoff, and inventing those would be
+          guessing.
         </p>
         <p>
           So the output reports its own mapping state rather than hiding it. Submit the form and
           the JSON includes a block like:
         </p>
         <pre className="about-code" aria-label="Example mapping status in the output">
-{`"mapping": { "answered": 14, "mapped": 0, "unmapped": [ ... ] }`}
+{`"mapping": { "answered": 14, "mapped": 12, "unmapped": [ "isAdminError", ... ] }`}
         </pre>
         <p>
-          The moment the specification arrives, populating those names is an edit in one file, and
-          mapping completeness becomes a number that can be tracked to 100 percent. That is what
-          PRS#6 is graded on.
+          The moment the kickoff specification arrives, completing or correcting those names is an
+          edit in one file, and mapping completeness is already a number on every submission,
+          trackable to 100 percent. That is what PRS#6 is graded on.
         </p>
       </Section>
 
       <Section id="verified" title="What has been verified">
         <ul>
-          <li><strong>101 automated tests across 13 files</strong>, run on every change. They cover
+          <li><strong>106 automated tests across 14 files</strong>, run on every change. They cover
             the branching matrix for both paths, the suppression rule, repeatable vaccine groups,
             validation, configuration overrides, completion progress, the mapping boundary, and
             accessibility.</li>
@@ -162,7 +166,7 @@ publicLabel: 'Lot number on the vaccine record'  // public`}
             requests and 86 kilobytes. The requirement is 3 seconds. The measurement script is in
             the repository at <code>verification/perf.mjs</code>, so the figure can be re-run
             rather than taken on trust.</li>
-          <li><strong>Accessibility.</strong> Zero automated violations across eleven interface
+          <li><strong>Accessibility.</strong> Zero automated violations across twelve interface
             states. An Accessibility Conformance Report accompanies the quotation.</li>
           <li><strong>Configuration cannot inject markup.</strong> A payload combining an element
             and an inline event handler was entered through the admin surface. It rendered as

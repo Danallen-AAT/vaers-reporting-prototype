@@ -90,6 +90,27 @@ describe('accessibility: public reporting form', () => {
     expect(await axe(container, AXE_OPTS)).toHaveNoViolations();
   }, 25000);
 
+  it('has no violations on the review-and-confirm stage', async () => {
+    const user = userEvent.setup();
+    const { container } = render(<App />);
+    await user.click(screen.getByRole('radio', { name: 'Patient, parent, or caregiver' }));
+    await user.type(screen.getByLabelText(/your name/i), 'Test Reporter');
+    await user.selectOptions(screen.getByLabelText(/your relationship to the patient/i), 'parent');
+    await user.type(screen.getByLabelText(/how old was the patient/i), '6');
+    await user.selectOptions(screen.getByLabelText(/patient's sex/i), 'F');
+    const rec = screen.getByRole('group', { name: /has the patient recovered/i });
+    await user.click(within(rec).getByRole('radio', { name: 'Yes' }));
+    await user.selectOptions(screen.getByLabelText(/which vaccine\?/i), 'influenza');
+    await user.type(screen.getByLabelText(/date of the shot/i), '2026-08-20');
+    await user.type(screen.getByLabelText(/when did the problem start/i), '2026-08-21');
+    await user.type(screen.getByLabelText(/describe what happened/i), 'Fever after the shot.');
+    const ser = screen.getByRole('group', { name: /how serious was it/i });
+    await user.click(within(ser).getByRole('checkbox', { name: /none of the above/i }));
+    await user.click(screen.getByRole('button', { name: /review submission/i }));
+    await screen.findByRole('heading', { name: /review your report/i });
+    expect(await axe(container, AXE_OPTS)).toHaveNoViolations();
+  }, 40000);
+
   it('has no violations while validation errors are displayed', async () => {
     const user = userEvent.setup();
     const { container } = render(<App />);

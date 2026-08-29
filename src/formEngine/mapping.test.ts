@@ -74,10 +74,27 @@ describe('mapping boundary', () => {
     expect(out.meta.mapping.unmapped).toEqual(['reporterType']);
   });
 
-  it('reports the real form as fully unmapped, pending the CDC specification', () => {
+  it('maps the real form to published VAERS 2.0 items where a counterpart exists', () => {
     const out = buildStructuredOutput(vaersForm, { reporterType: 'public' });
     expect(out.meta.mapping.answered).toBeGreaterThan(0);
-    expect(out.meta.mapping.mapped).toBe(0);
-    expect(out.meta.mapping.unmapped.length).toBe(out.meta.mapping.answered);
+    // Every answered field on this minimal submission has a printed-form home.
+    expect(out.meta.mapping.mapped).toBe(out.meta.mapping.answered);
+    expect(out.answers['vaers2_item13_formCompletedBy']).toBe('public');
+  });
+
+  it('keeps modernized-workflow fields deliberately unmapped until the CDC definitions arrive', () => {
+    const out = buildStructuredOutput(vaersForm, {
+      reporterType: 'provider',
+      isAdminError: 'yes',
+      errorType: 'wrong_dose',
+      errorHadAE: 'no',
+      errorDescription: 'Wrong dose administered.',
+    });
+    for (const id of ['isAdminError', 'errorType', 'errorHadAE', 'errorDescription']) {
+      expect(out.meta.mapping.unmapped).toContain(id);
+      expect(out.answers[id]).toBeDefined();
+    }
+    // The printed form has no administration-error items; these await PWS Section 9.
+    expect(out.meta.mapping.mapped).toBeGreaterThan(0);
   });
 });

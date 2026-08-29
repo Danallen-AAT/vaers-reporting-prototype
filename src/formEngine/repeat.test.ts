@@ -74,10 +74,10 @@ describe('structured output', () => {
     };
     const out = buildStructuredOutput(vaersForm, values);
     expect(out.repeated.vaccines).toHaveLength(2);
-    expect(out.repeated.vaccines[0].vaxType).toBe('covid19');
-    expect(out.repeated.vaccines[1].vaxType).toBe('influenza');
+    expect(out.repeated.vaccines[0]['vaers2_item17_vaccineType']).toBe('covid19');
+    expect(out.repeated.vaccines[1]['vaers2_item17_vaccineType']).toBe('influenza');
     // Repeated fields must not leak into the flat answers map.
-    expect(out.answers.vaxType).toBeUndefined();
+    expect(out.answers['vaers2_item17_vaccineType']).toBeUndefined();
   });
 
   it('drops instances the reporter added but left blank', () => {
@@ -92,7 +92,7 @@ describe('structured output', () => {
 
   it('still emits non-repeating answers normally', () => {
     const out = buildStructuredOutput(vaersForm, { ...base, reporterName: 'Dr. Test' });
-    expect(out.answers.reporterName).toBe('Dr. Test');
+    expect(out.answers['vaers2_item13_completedByName']).toBe('Dr. Test');
     expect(out.reporterType).toBe('provider');
   });
 });

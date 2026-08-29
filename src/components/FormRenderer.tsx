@@ -35,18 +35,38 @@ export function FormRenderer() {
   const errorCount = Object.keys(errors).length;
 
   const summaryRef = useRef<HTMLDivElement>(null);
-  const [showOutput, setShowOutput] = useState(false);
+  const reviewRef = useRef<HTMLElement>(null);
+  // A submitted report is a record of consequence (SC 3.3.4), so submission is
+  // three stages: editing, review of a plain-language summary, then an explicit
+  // confirmation that finalizes it. Nothing becomes final on the first click.
+  const [stage, setStage] = useState<'editing' | 'review' | 'final'>('editing');
+  const showOutput = stage === 'final';
   const [surveyOpen, setSurveyOpen] = useState(false);
 
   useEffect(() => {
     if (submitted && errorCount > 0) summaryRef.current?.focus();
   }, [submitted, errorCount]);
 
+  useEffect(() => {
+    if (stage === 'review') reviewRef.current?.focus();
+  }, [stage]);
+
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const ok = validate();
-    setShowOutput(ok);
-    if (ok) setSurveyOpen(true);
+    setStage(ok ? 'review' : 'editing');
+  };
+
+  const confirmFinal = () => {
+    setStage('final');
+    setSurveyOpen(true);
+  };
+
+  /** Plain-language answer summary for the review stage: option labels, not codes. */
+  const displayValue = (f: FieldConfig, v: unknown): string => {
+    const lab = (x: unknown) => f.options?.find((o) => o.value === x)?.label ?? String(x);
+    if (Array.isArray(v)) return v.map(lab).join('; ');
+    return lab(v);
   };
 
   const labelOf = (f: FieldConfig) => (isPublic && f.publicLabel ? f.publicLabel : f.label);
@@ -110,7 +130,7 @@ export function FormRenderer() {
             className="btn btn-link"
             onClick={() => {
               reset();
-              setShowOutput(false);
+              setStage('editing');
             }}
           >
             Change
@@ -190,17 +210,74 @@ export function FormRenderer() {
         </div>
       )}
 
+      {stage === 'review' && errorCount === 0 && (
+        <section
+          className="review-stage"
+          aria-labelledby="review-heading"
+          ref={reviewRef}
+          tabIndex={-1}
+        >
+          <h2 id="review-heading" className="section-title">
+            Review your report before it becomes final
+          </h2>
+          <p className="section-desc">
+            Check each answer below. You can go back and correct anything.
+            Nothing is submitted until you confirm.
+          </p>
+          <dl className="review-list">
+            {sections.map(({ section, fields, instances }) =>
+              section.repeat
+                ? Array.from({ length: instances }).flatMap((_, i) =>
+                    fields
+                      .filter((f) => {
+                        const v = values[repeatFieldId(f.id, i)];
+                        return v !== undefined && v !== '' && !(Array.isArray(v) && v.length === 0);
+                      })
+                      .map((f) => (
+                        <div key={repeatFieldId(f.id, i)} className="review-row">
+                          <dt>
+                            {labelOf(f)} ({section.repeat!.itemLabel} {i + 1})
+                          </dt>
+                          <dd>{displayValue(f, values[repeatFieldId(f.id, i)])}</dd>
+                        </div>
+                      )),
+                  )
+                : fields
+                    .filter((f) => {
+                      const v = values[f.id];
+                      return v !== undefined && v !== '' && !(Array.isArray(v) && v.length === 0);
+                    })
+                    .map((f) => (
+                      <div key={f.id} className="review-row">
+                        <dt>{labelOf(f)}</dt>
+                        <dd>{displayValue(f, values[f.id])}</dd>
+                      </div>
+                    )),
+            )}
+          </dl>
+          <div className="form-actions">
+            <button type="button" className="btn btn-primary" onClick={confirmFinal}>
+              Confirm and finalize report
+            </button>
+            <button type="button" className="btn btn-outline" onClick={() => setStage('editing')}>
+              Go back and make corrections
+            </button>
+          </div>
+        </section>
+      )}
+
       {showOutput && errorCount === 0 && (
         <section className="structured-output" aria-labelledby="output-heading">
           <h2 id="output-heading" className="section-title">
             Structured output (VAERS-compatible)
           </h2>
           <p className="section-desc">
-            On submit the form emits clean structured JSON through one isolated
-            mapping layer. Element-level names await the VAERS data element
-            definitions CDC furnishes at kickoff, and the meta block below
-            reports that mapping status openly (see How it works). Nothing is
-            stored or transmitted in this prototype.
+            Your confirmed report as clean structured JSON from one isolated
+            mapping layer, keyed to the published VAERS 2.0 form items where a
+            counterpart exists. Fields born of the modernized workflow await the
+            data element definitions CDC furnishes at kickoff, and the meta
+            block below reports both counts openly (see How it works). Nothing
+            is stored or transmitted in this prototype.
           </p>
           <div className="form-actions output-actions">
             <button type="button" className="btn btn-outline" onClick={downloadOutput}>

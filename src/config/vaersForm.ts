@@ -67,6 +67,7 @@ export const vaersForm: FormConfig = {
       fields: [
         {
           id: 'reporterType',
+          vaersElement: 'vaers2_item13_formCompletedBy',
           label: 'Reporter type',
           publicLabel: 'Who is filling this out?',
           type: 'radio',
@@ -81,6 +82,7 @@ export const vaersForm: FormConfig = {
         },
         {
           id: 'reporterName',
+          vaersElement: 'vaers2_item13_completedByName',
           label: 'Reporter name',
           publicLabel: 'Your name',
           type: 'text',
@@ -89,6 +91,7 @@ export const vaersForm: FormConfig = {
         },
         {
           id: 'reporterEmail',
+          vaersElement: 'vaers2_item13_email',
           label: 'Reporter email',
           publicLabel: 'Your email',
           type: 'email',
@@ -96,6 +99,7 @@ export const vaersForm: FormConfig = {
         },
         {
           id: 'reporterPhone',
+          vaersElement: 'vaers2_item13_phone',
           label: 'Reporter phone',
           publicLabel: 'Your phone',
           type: 'tel',
@@ -103,6 +107,7 @@ export const vaersForm: FormConfig = {
         },
         {
           id: 'facilityName',
+          vaersElement: 'vaers2_item15_facilityName',
           label: 'Facility / provider name',
           publicLabel: 'Clinic or pharmacy name (if known)',
           type: 'text',
@@ -110,6 +115,7 @@ export const vaersForm: FormConfig = {
         },
         {
           id: 'relationToPatient',
+          vaersElement: 'vaers2_item13_relationToPatient',
           label: 'Relationship to patient',
           publicLabel: 'Your relationship to the patient',
           type: 'select',
@@ -134,6 +140,7 @@ export const vaersForm: FormConfig = {
       fields: [
         {
           id: 'patientAgeAtVax',
+          vaersElement: 'vaers2_item06_ageAtVaccination',
           label: 'Age at vaccination',
           publicLabel: 'How old was the patient at the time of the shot?',
           type: 'number',
@@ -143,6 +150,7 @@ export const vaersForm: FormConfig = {
         },
         {
           id: 'patientDob',
+          vaersElement: 'vaers2_item02_dateOfBirth',
           label: 'Date of birth',
           publicLabel: "Patient's date of birth",
           type: 'date',
@@ -154,6 +162,7 @@ export const vaersForm: FormConfig = {
         },
         {
           id: 'patientSex',
+          vaersElement: 'vaers2_item03_sex',
           label: 'Sex',
           publicLabel: "Patient's sex",
           type: 'select',
@@ -167,6 +176,7 @@ export const vaersForm: FormConfig = {
         },
         {
           id: 'patientState',
+          vaersElement: 'vaers2_item01_patientState',
           label: 'State',
           publicLabel: 'State where the patient lives',
           type: 'select',
@@ -181,6 +191,7 @@ export const vaersForm: FormConfig = {
         // reveals the fields instead.
         {
           id: 'patientPregnant',
+          vaersElement: 'vaers2_item08_pregnantAtVaccination',
           label: 'Pregnant at time of vaccination?',
           publicLabel: 'Was the patient pregnant when they got the shot?',
           type: 'radio',
@@ -193,6 +204,7 @@ export const vaersForm: FormConfig = {
         },
         {
           id: 'pregnancyDueDate',
+          vaersElement: 'vaers2_item18_pregnancyDueDate',
           label: 'Estimated due date',
           publicLabel: 'When was the baby due?',
           type: 'date',
@@ -202,6 +214,7 @@ export const vaersForm: FormConfig = {
         },
         {
           id: 'pregnancyComplications',
+          vaersElement: 'vaers2_item18_pregnancyComplications',
           label: 'Pregnancy complications',
           publicLabel: 'Any problems with the pregnancy?',
           type: 'textarea',
@@ -214,6 +227,7 @@ export const vaersForm: FormConfig = {
         },
         {
           id: 'patientRecovered',
+          vaersElement: 'vaers2_item20_recovered',
           label: 'Has the patient recovered?',
           publicLabel: 'Has the patient recovered?',
           type: 'radio',
@@ -242,6 +256,7 @@ export const vaersForm: FormConfig = {
       fields: [
         {
           id: 'vaxType',
+          vaersElement: 'vaers2_item17_vaccineType',
           label: 'Vaccine type',
           publicLabel: 'Which vaccine?',
           type: 'select',
@@ -259,6 +274,7 @@ export const vaersForm: FormConfig = {
         },
         {
           id: 'vaxManufacturer',
+          vaersElement: 'vaers2_item17_manufacturer',
           label: 'Manufacturer',
           publicLabel: 'Vaccine maker (if known)',
           type: 'text',
@@ -266,6 +282,7 @@ export const vaersForm: FormConfig = {
         },
         {
           id: 'vaxLot',
+          vaersElement: 'vaers2_item17_lotNumber',
           label: 'Lot number',
           publicLabel: 'Lot number (on the card or record, if known)',
           type: 'text',
@@ -277,6 +294,7 @@ export const vaersForm: FormConfig = {
         },
         {
           id: 'vaxDoseNum',
+          vaersElement: 'vaers2_item17_doseNumber',
           label: 'Dose number in series',
           publicLabel: 'Which dose was it?',
           type: 'select',
@@ -291,6 +309,7 @@ export const vaersForm: FormConfig = {
         },
         {
           id: 'vaxRoute',
+          vaersElement: 'vaers2_item17_route',
           label: 'Route of administration',
           publicLabel: 'How was the shot given?',
           type: 'select',
@@ -306,6 +325,7 @@ export const vaersForm: FormConfig = {
         },
         {
           id: 'vaxSite',
+          vaersElement: 'vaers2_item17_site',
           label: 'Anatomical site',
           publicLabel: 'Where on the body was the shot given?',
           type: 'select',
@@ -320,6 +340,7 @@ export const vaersForm: FormConfig = {
         },
         {
           id: 'vaxDate',
+          vaersElement: 'vaers2_item04_vaccinationDate',
           label: 'Vaccination date',
           publicLabel: 'Date of the shot',
           type: 'date',
@@ -404,6 +425,7 @@ export const vaersForm: FormConfig = {
       fields: [
         {
           id: 'aeOnsetDate',
+          vaersElement: 'vaers2_item05_onsetDate',
           label: 'Adverse event onset date',
           publicLabel: 'When did the problem start?',
           type: 'date',
@@ -412,6 +434,7 @@ export const vaersForm: FormConfig = {
         },
         {
           id: 'aeOnsetTime',
+          vaersElement: 'vaers2_item05_onsetTime',
           label: 'Time to onset',
           publicLabel: 'About how long after the shot did it start?',
           type: 'text',
@@ -420,6 +443,7 @@ export const vaersForm: FormConfig = {
         },
         {
           id: 'aeDescription',
+          vaersElement: 'vaers2_item18_description',
           label: 'Adverse event description',
           publicLabel: 'Describe what happened',
           type: 'textarea',
@@ -428,6 +452,7 @@ export const vaersForm: FormConfig = {
         },
         {
           id: 'aeSeriousness',
+          vaersElement: 'vaers2_item21_outcome',
           label: 'Seriousness criteria',
           publicLabel: 'How serious was it? (check all that apply)',
           type: 'multiselect',
@@ -450,6 +475,7 @@ export const vaersForm: FormConfig = {
         },
         {
           id: 'aeDeathDate',
+          vaersElement: 'vaers2_item21_deathDate',
           label: 'Date of death',
           type: 'date',
           path: 'both',
@@ -458,6 +484,7 @@ export const vaersForm: FormConfig = {
         },
         {
           id: 'aeHospDays',
+          vaersElement: 'vaers2_item21_hospDays',
           label: 'Number of days hospitalized',
           type: 'number',
           path: 'both',
@@ -466,6 +493,7 @@ export const vaersForm: FormConfig = {
         },
         {
           id: 'aeTreatment',
+          vaersElement: 'vaers2_item18_treatment',
           label: 'Treatment given',
           publicLabel: 'What treatment was given, if any?',
           type: 'textarea',
@@ -473,6 +501,7 @@ export const vaersForm: FormConfig = {
         },
         {
           id: 'aeOutcome',
+          vaersElement: 'vaers2_item20_currentStatus',
           label: 'Current status',
           publicLabel: 'How is the patient now?',
           type: 'select',
@@ -496,6 +525,7 @@ export const vaersForm: FormConfig = {
       fields: [
         {
           id: 'medHistory',
+          vaersElement: 'vaers2_item12_chronicConditions',
           label: 'Relevant medical history / conditions',
           publicLabel: 'Any health conditions we should know about?',
           type: 'textarea',
@@ -503,6 +533,7 @@ export const vaersForm: FormConfig = {
         },
         {
           id: 'allergies',
+          vaersElement: 'vaers2_item10_allergies',
           label: 'Known allergies',
           publicLabel: 'Known allergies',
           type: 'textarea',
@@ -510,6 +541,7 @@ export const vaersForm: FormConfig = {
         },
         {
           id: 'concomitantMeds',
+          vaersElement: 'vaers2_item09_medications',
           label: 'Concomitant medications',
           publicLabel: 'Other medicines taken around the same time',
           type: 'textarea',
@@ -517,6 +549,7 @@ export const vaersForm: FormConfig = {
         },
         {
           id: 'priorVaxReactions',
+          vaersElement: 'vaers2_item23_priorVaccineAdverseEvent',
           label: 'Prior adverse events after vaccination',
           publicLabel: 'Any past reactions to vaccines?',
           type: 'textarea',
@@ -524,12 +557,14 @@ export const vaersForm: FormConfig = {
         },
         {
           id: 'labData',
+          vaersElement: 'vaers2_item19_labResults',
           label: 'Relevant lab / diagnostic test results',
           type: 'textarea',
           path: 'provider',
         },
         {
           id: 'illnessAtVax',
+          vaersElement: 'vaers2_item11_illnessAtVaccination',
           label: 'Illness at time of vaccination',
           publicLabel: 'Was the patient sick when they got the shot?',
           type: 'textarea',
@@ -560,6 +595,7 @@ export const vaersForm: FormConfig = {
         },
         {
           id: 'freeText',
+          vaersElement: 'vaers2_item18_additionalInfo',
           label: 'Anything else to add',
           publicLabel: "Anything else you'd like to add",
           type: 'textarea',
