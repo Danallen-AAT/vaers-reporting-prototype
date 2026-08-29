@@ -375,6 +375,19 @@ select.input {
   gap: 1rem;
   padding-block: 0.6rem;
 }
+/* On a handset the brand and the four links cannot share one row without
+   overflowing the viewport, so the links wrap to their own centered row. */
+@media (max-width: 30rem) {
+  .nav-inner {
+    flex-wrap: wrap;
+    justify-content: center;
+    row-gap: 0.15rem;
+  }
+  .site-nav nav {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
 .brand {
   color: #fff;
   text-decoration: none;
