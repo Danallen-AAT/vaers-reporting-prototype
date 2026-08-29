@@ -4,12 +4,12 @@ import { writeFileSync, mkdirSync } from 'node:fs';
 const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 const OUT = new URL('./.output', import.meta.url).pathname.replace(/^\//, '');
 const PORT = 9337;
-const URL = 'http://localhost:5173/#/report';
+const TARGET = 'http://localhost:5173/#/report';
 mkdirSync(OUT, { recursive: true });
 
 const chrome = spawn(CHROME, ['--headless=new', `--remote-debugging-port=${PORT}`,
   '--user-data-dir=' + OUT + '/cdpprofile5', '--window-size=1280,900',
-  '--hide-scrollbars', '--no-first-run', '--disable-gpu', URL], { stdio: 'ignore' });
+  '--hide-scrollbars', '--no-first-run', '--disable-gpu', TARGET], { stdio: 'ignore' });
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 let page;
@@ -29,7 +29,7 @@ async function shoot(n) {
 }
 
 await send('Page.enable'); await send('Runtime.enable');
-await send('Page.navigate', { url: URL });
+await send('Page.navigate', { url: TARGET });
 await sleep(2500);
 
 // Public path, then force validation errors.
