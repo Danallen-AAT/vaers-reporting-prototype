@@ -6,6 +6,7 @@
 import { useState } from 'react';
 import { repeatFieldId, type FieldConfig } from '../config/types';
 import { useForm } from '../state/FormContext';
+import { FileUpload } from './FileUpload';
 
 function labelFor(field: FieldConfig, isPublic: boolean): string {
   return isPublic && field.publicLabel ? field.publicLabel : field.label;
@@ -190,14 +191,7 @@ export function Field({ field, instance = 0 }: { field: FieldConfig; instance?: 
       );
       break;
     case 'file':
-      control = (
-        <input
-          {...commonProps}
-          className="input"
-          type="file"
-          onChange={(e) => setValue(key, e.target.files?.[0]?.name ?? '')}
-        />
-      );
+      control = <FileUpload fieldKey={key} field={field} describedBy={describedBy} />;
       break;
     case 'checkbox':
       // Single boolean checkbox.

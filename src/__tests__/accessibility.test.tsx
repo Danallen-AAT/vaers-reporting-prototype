@@ -61,6 +61,13 @@ describe('accessibility: public reporting form', () => {
     const user = userEvent.setup();
     const { container } = render(<App />);
     await user.click(screen.getByRole('radio', { name: 'Patient, parent, or caregiver' }));
+    // Include the functional upload UI in this state: one attached document.
+    const up = screen.getByLabelText(/upload supporting documents/i) as HTMLInputElement;
+    await user.upload(
+      up,
+      new File([new Uint8Array(64)], 'discharge-summary.pdf', { type: 'application/pdf' }),
+    );
+    await screen.findByRole('list', { name: /attached documents/i });
     expect(await axe(container, AXE_OPTS)).toHaveNoViolations();
   }, 20000);
 

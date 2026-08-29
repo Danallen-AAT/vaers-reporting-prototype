@@ -30,7 +30,7 @@ This is not incidental. It is what makes the low-code admin surface possible: an
 2. **Intelligent assistance**: inline validation, contextual help text, reactive FAQ panel
 3. **Low-code configuration surface**: an admin screen where a program owner edits a question label, help text, or FAQ entry, and the live form re-renders from configuration
 4. **Section 508 accessibility** built into every component from the start, not retrofitted
-5. **Medical record upload stub** plus a free-text field, client side only
+5. **Functional client-side upload** with the Phase 1 document policy (accepted types and size limits as configuration), listing and removal, plus a free-text field; nothing is read, stored, or transmitted
 6. **Document suggestion rules**, for example a provider indicating hospitalization is prompted to attach a discharge summary
 7. **Post-submission satisfaction survey**
 8. **Structured output**, emitting clean VAERS-compatible JSON on submit
@@ -65,7 +65,7 @@ Field-level detail, branching rules, and plain-language substitutions are in `VA
 
 Do not:
 - Add real authentication or user management. The admin login is intentionally a mock.
-- Store or transmit real personal or health information. Synthetic data only. Upload is a client-side stub.
+- Store or transmit real personal or health information. Synthetic data only. The upload validates and lists locally; file contents are never read, stored, or transmitted.
 - Build real backend integration. Structured JSON output is the demonstration.
 - Over-engineer infrastructure.
 

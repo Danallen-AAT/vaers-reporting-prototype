@@ -586,8 +586,10 @@ export const vaersForm: FormConfig = {
           publicLabel: 'Upload supporting documents (optional)',
           type: 'file',
           path: 'both',
+          fileAccept: ['.pdf'],
+          fileMaxMB: 10,
           helpText:
-            'Demonstration only. Files are not uploaded, stored, or transmitted. Do not attach real records.',
+            'Demonstration only. Files are validated and listed in your browser; they are not uploaded, stored, or transmitted. Do not attach real records.',
           tooltip:
             'Discharge summaries, clinic notes, laboratory results and imaging reports are the most useful supporting documents. Attaching them at submission avoids a follow-up request later.',
           publicTooltip:

@@ -17,15 +17,27 @@ A working prototype of a modernized public reporting form for the Vaccine Advers
 ```bash
 npm install
 npm run dev        # http://localhost:5173
-npm test           # 34 tests
+npm test           # the full suite; the count is printed at the end of every run
 npm run typecheck  # tsc, no emit
 npm run build      # production build to dist/
 ```
 
-Two routes:
+Deployed build: https://happy-tree-02634e910.7.azurestaticapps.net
 
-- `#/` the public reporting form
-- `#/admin` the low-code configuration surface (login accepts anything, it is a mock)
+Routes:
+
+- `#/` the landing page
+- `#/report` the reporting form, both reporter paths
+- `#/admin` the low-code configuration surface (the sign-in accepts anything; it stands in for CDC single sign-on)
+- `#/about` how it works, written for reviewers
+
+## Verification
+
+Every measured claim made about this prototype is produced by a script in
+`verification/`, kept in the repository so any claim can be re-run rather than
+taken on trust: performance under throttle (`perf.mjs`), behavioral checks that
+press real keys (`verify_live.mjs`, `a11y_audit.mjs`), and horizontal-overflow
+checks at handset width (`responsive.mjs`). See `verification/README.md`.
 
 **The fastest way to understand the architecture:** open `#/admin`, change a field label, watch the preview on the right update as you type, then go to `#/` and see the same change on the real form. That round trip is the whole design in about fifteen seconds.
 

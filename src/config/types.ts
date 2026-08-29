@@ -94,6 +94,10 @@ export interface FieldConfig {
    * change control, because it moves where an answer lands in the database.
    */
   vaersElement?: string;
+  /** File fields: accepted extensions (Phase 1 policy). Extending is a config change. */
+  fileAccept?: string[];
+  /** File fields: per-file size limit in megabytes. */
+  fileMaxMB?: number;
   /** Field is shown only when ALL of these predicates hold. */
   visibleWhen?: Condition[];
   /** Field is hidden when ALL of these predicates hold (overrides visibleWhen). */

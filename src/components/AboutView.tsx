@@ -195,8 +195,10 @@ publicLabel: 'Lot number on the vaccine record'  // public`}
             demonstrate the branching architecture and both reporter paths. Under PWS 1.6 the
             authoritative list is that of the current VAERS form, established against a
             Government-approved specification at kickoff. Adding an element is a schema edit.</li>
-          <li><strong>Upload is a client-side stub.</strong> Real file handling requires the
-            security controls of the production environment.</li>
+          <li><strong>Upload runs entirely in the browser.</strong> Selection, the Phase 1
+            document policy (accepted types and size limits held as configuration), listing and
+            removal all function; file contents are never read, stored, or transmitted. Server-side
+            handling belongs to the production environment and its security controls.</li>
           <li><strong>The admin sign-in is a mock.</strong> It accepts anything. Real authentication
             belongs to CDC's environment, not to a demonstration.</li>
           <li><strong>Physical handset verification and assistive technology testing have not been
