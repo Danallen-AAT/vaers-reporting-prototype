@@ -121,3 +121,13 @@ Keep it that way. Any new field type must be keyboard operable and screen reader
 ## Stack
 
 React 19, TypeScript, Vite 6, Vitest with React Testing Library. Deployed as a static site to Azure Static Web Apps.
+
+---
+
+## License and use
+
+Provided for evaluation under CDC RFQ 75D301-26-Q-00146. No license is granted:
+all rights reserved by Allen App Tools LLC. Custom code produced under the
+resulting contract will be delivered with Government rights under FAR 52.227-14
+and published as open source in accordance with the solicitation and
+OMB M-16-21.
