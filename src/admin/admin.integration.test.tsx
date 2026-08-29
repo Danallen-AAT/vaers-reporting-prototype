@@ -91,7 +91,11 @@ describe('admin config surface', () => {
     await user.clear(labelInput);
     await user.type(labelInput, 'Renamed field');
 
+    // Reset is a guarded, two-step action: the trigger opens a confirmation
+    // and only the explicit confirm resets.
     await user.click(screen.getByRole('button', { name: /reset all to defaults/i }));
+    const confirm = screen.getByRole('group', { name: /removes every customization/i });
+    await user.click(within(confirm).getByRole('button', { name: 'Reset everything' }));
 
     const preview = screen.getByRole('complementary', { name: /live form preview/i });
     expect(within(preview).getByLabelText(/reporter name/i)).toBeInTheDocument();

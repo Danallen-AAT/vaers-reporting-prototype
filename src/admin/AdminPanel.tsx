@@ -7,6 +7,7 @@
 // preview on the right instantly - the "no redeploy" low-code story, on camera.
 // ---------------------------------------------------------------------------
 import { useState } from 'react';
+import { ConfirmAction } from '../components/ConfirmAction';
 import { useConfig } from '../state/ConfigStore';
 import { FormProvider } from '../state/FormContext';
 import { FormRenderer } from '../components/FormRenderer';
@@ -40,14 +41,15 @@ export function AdminPanel({ onSignOut }: { onSignOut?: () => void }) {
           <a className="btn btn-primary" href="#/">
             Open the live reporting form ↗
           </a>
-          <button
-            type="button"
-            className="btn btn-outline"
-            onClick={resetAll}
+          <ConfirmAction
+            triggerLabel="Reset all to defaults"
+            prompt="This removes every customization and returns the form to its default configuration."
+            confirmLabel="Reset everything"
+            cancelLabel="Keep my changes"
+            onConfirm={resetAll}
             disabled={!isCustomized}
-          >
-            Reset all to defaults
-          </button>
+            fallbackFocusId="main"
+          />
           {isCustomized ? (
             <span className="badge badge-mod" role="status">
               Customized

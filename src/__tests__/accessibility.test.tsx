@@ -118,6 +118,17 @@ describe('accessibility: public reporting form', () => {
     expect(await axe(container, AXE_OPTS)).toHaveNoViolations();
   }, 40000);
 
+  it('has no violations with the start-over confirmation open', async () => {
+    const user = userEvent.setup();
+    const { container } = render(<App />);
+    await user.click(screen.getByRole('radio', { name: 'Patient, parent, or caregiver' }));
+    await user.click(screen.getByRole('button', { name: 'Start over' }));
+    expect(
+      screen.getByRole('group', { name: /starting over clears every answer/i }),
+    ).toBeInTheDocument();
+    expect(await axe(container, AXE_OPTS)).toHaveNoViolations();
+  }, 25000);
+
   it('has no violations while validation errors are displayed', async () => {
     const user = userEvent.setup();
     const { container } = render(<App />);
@@ -157,6 +168,22 @@ describe('accessibility: admin configuration surface', () => {
         <AdminPanel />
       </ConfigProvider>,
     );
+    expect(await axe(container, AXE_OPTS)).toHaveNoViolations();
+  }, 30000);
+
+  it('has no violations with the reset-all confirmation open', async () => {
+    const user = userEvent.setup();
+    const { container } = render(
+      <ConfigProvider>
+        <AdminPanel />
+      </ConfigProvider>,
+    );
+    // Customize first so the guarded reset control is enabled.
+    await user.type(screen.getAllByRole('textbox')[0], ' X');
+    await user.click(screen.getByRole('button', { name: 'Reset all to defaults' }));
+    expect(
+      screen.getByRole('group', { name: /removes every customization/i }),
+    ).toBeInTheDocument();
     expect(await axe(container, AXE_OPTS)).toHaveNoViolations();
   }, 30000);
 });

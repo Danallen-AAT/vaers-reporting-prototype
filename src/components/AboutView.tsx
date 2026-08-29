@@ -155,7 +155,7 @@ publicLabel: 'Lot number on the vaccine record'  // public`}
 
       <Section id="verified" title="What has been verified">
         <ul>
-          <li><strong>110 automated tests across 15 files</strong>, run on every change. They cover
+          <li><strong>117 automated tests across 16 files</strong>, run on every change. They cover
             the branching matrix for both paths, the suppression rule, repeatable vaccine groups,
             validation, configuration overrides, completion progress, the mapping boundary, and
             accessibility.</li>
@@ -166,7 +166,7 @@ publicLabel: 'Lot number on the vaccine record'  // public`}
             requests and 88 kilobytes. The requirement is 3 seconds. The measurement script is in
             the repository at <code>verification/perf.mjs</code>, so the figure can be re-run
             rather than taken on trust.</li>
-          <li><strong>Accessibility.</strong> Zero automated violations across twelve interface
+          <li><strong>Accessibility.</strong> Zero automated violations across fourteen interface
             states. An Accessibility Conformance Report accompanies the quotation.</li>
           <li><strong>Configuration cannot inject markup.</strong> A payload combining an element
             and an inline event handler was entered through the admin surface. It rendered as

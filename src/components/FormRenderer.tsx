@@ -13,10 +13,11 @@ import { getVisibleForm } from '../formEngine/visibility';
 import { buildStructuredOutput } from '../formEngine/output';
 import { repeatFieldId, type FieldConfig, type SectionConfig } from '../config/types';
 import { Field } from './Field';
+import { ConfirmAction } from './ConfirmAction';
 import { DocSuggestions } from './DocSuggestions';
 import { SurveyDialog } from './SurveyDialog';
 import { ProgressPanel } from './ProgressPanel';
-import { handleJump } from '../lib/inPageJump';
+import { handleJump, jumpTo } from '../lib/inPageJump';
 
 export function FormRenderer() {
   const {
@@ -50,6 +51,14 @@ export function FormRenderer() {
   useEffect(() => {
     if (stage === 'review') reviewRef.current?.focus();
   }, [stage]);
+
+  // Switching reporter type invalidates the review summary, so any change to
+  // the path drops back to editing rather than leaving a stale review on
+  // screen. Answers themselves are preserved by the engine where they apply.
+  const reporterType = values['reporterType'];
+  useEffect(() => {
+    setStage('editing');
+  }, [reporterType]);
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -125,16 +134,30 @@ export function FormRenderer() {
             {isPublic ? 'Public reporter' : 'Healthcare provider'}
           </span>
           <span className="path-note">Wording and fields are tailored to this path.</span>
+          {/* Non-destructive: jumps to the reporter-type question, so both
+              ways of switching paths share one behavior and answers survive
+              wherever they still apply. Clearing work is a separate control
+              behind an explicit confirmation. */}
           <button
             type="button"
             className="btn btn-link"
-            onClick={() => {
-              reset();
-              setStage('editing');
-            }}
+            aria-label="Change reporter type"
+            onClick={() => jumpTo('reporterType')}
           >
             Change
           </button>
+          <ConfirmAction
+            triggerLabel="Start over"
+            prompt="Starting over clears every answer on this report."
+            confirmLabel="Clear all answers"
+            cancelLabel="Keep my answers"
+            triggerClass="btn btn-link"
+            fallbackFocusId="reporterType"
+            onConfirm={() => {
+              reset();
+              setStage('editing');
+            }}
+          />
         </div>
       )}
 
