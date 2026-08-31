@@ -446,6 +446,29 @@ select.input {
   border-color: var(--error);
 }
 
+/* Admin question creation and visibility rules. */
+.add-question {
+  margin-top: 0.75rem;
+}
+.fe-cond {
+  grid-column: 1 / -1;
+  font-size: 0.86rem;
+  color: var(--primary-dark);
+  background: #f0f6fb;
+  border-left: 3px solid var(--primary);
+  padding: 0.35rem 0.6rem;
+  margin: 0.25rem 0 0;
+}
+.badge-added {
+  background: var(--primary);
+  color: #fff;
+}
+.fe-check {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 /* Inline two-step confirmation for destructive controls. */
 .confirm-action {
   display: inline-flex;

@@ -4,6 +4,7 @@
 // ---------------------------------------------------------------------------
 import type { SectionConfig } from '../config/types';
 import { useConfig } from '../state/ConfigStore';
+import { AddQuestion } from './AddQuestion';
 import { FieldEditor } from './FieldEditor';
 
 export function SectionEditor({
@@ -64,6 +65,8 @@ export function SectionEditor({
         {section.fields.map((field) => (
           <FieldEditor key={field.id} field={field} previewPath={previewPath} />
         ))}
+
+        <AddQuestion section={section} />
       </div>
     </details>
   );

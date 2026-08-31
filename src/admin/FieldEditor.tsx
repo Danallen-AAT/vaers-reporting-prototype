@@ -8,7 +8,9 @@
 // fields and inputs that do not affect the current preview are marked instead.
 // ---------------------------------------------------------------------------
 import type { FieldConfig, RequiredRule } from '../config/types';
-import { useConfig } from '../state/ConfigStore';
+import { ConfirmAction } from '../components/ConfirmAction';
+import { useConfig, type FieldOverride } from '../state/ConfigStore';
+import { allFields, conditionFor, conditionText, eligibleControllers } from './conditions';
 
 function requiredValue(r?: RequiredRule): 'required' | 'optional' | 'conditional' {
   return r === true ? 'required' : r === 'conditional' ? 'conditional' : 'optional';
@@ -30,8 +32,24 @@ export function FieldEditor({
   field: FieldConfig;
   previewPath: 'public' | 'provider';
 }) {
-  const { setFieldOverride, resetField, isFieldModified } = useConfig();
+  const {
+    config,
+    setFieldOverride,
+    resetField,
+    isFieldModified,
+    isFieldAdded,
+    updateAddedField,
+    removeAddedField,
+    setAddedFieldCondition,
+  } = useConfig();
   const modified = isFieldModified(field.id);
+  const added = isFieldAdded(field.id);
+  const patch = (p: FieldOverride & Partial<Omit<FieldConfig, 'id'>>): void =>
+    added ? updateAddedField(field.id, p) : setFieldOverride(field.id, p);
+  const cond = field.visibleWhen?.[0];
+  const controllerField = cond
+    ? allFields(config).find((x) => x.field.id === cond.field)?.field
+    : undefined;
   const showPublic = field.path !== 'provider';
 
   // Does this field appear at all in the path currently being previewed?
@@ -52,6 +70,7 @@ export function FieldEditor({
         <span className="fe-title">{field.label || '(no label)'}</span>
         <code className="fe-id">{field.id}</code>
         <span className={`badge badge-path path-${field.path}`}>{PATH_LABEL[field.path]}</span>
+        {added && <span className="badge badge-added">Added here</span>}
         {modified && <span className="badge badge-mod">Modified</span>}
       </legend>
 
@@ -70,7 +89,7 @@ export function FieldEditor({
             className="fe-input"
             aria-label={`Label for ${field.id}`}
             value={field.label}
-            onChange={(e) => setFieldOverride(field.id, { label: e.target.value })}
+            onChange={(e) => patch({ label: e.target.value })}
           />
         </label>
 
@@ -84,7 +103,7 @@ export function FieldEditor({
               aria-label={`Public label for ${field.id}`}
               placeholder="(uses the clinical label)"
               value={field.publicLabel ?? ''}
-              onChange={(e) => setFieldOverride(field.id, { publicLabel: e.target.value })}
+              onChange={(e) => patch({ publicLabel: e.target.value })}
             />
           </label>
         )}
@@ -98,7 +117,7 @@ export function FieldEditor({
             aria-label={`Help text for ${field.id}`}
             placeholder="(none)"
             value={field.helpText ?? ''}
-            onChange={(e) => setFieldOverride(field.id, { helpText: e.target.value })}
+            onChange={(e) => patch({ helpText: e.target.value })}
           />
         </label>
 
@@ -112,7 +131,7 @@ export function FieldEditor({
               aria-label={`Public help text for ${field.id}`}
               placeholder="(uses the clinical help text)"
               value={field.publicHelpText ?? ''}
-              onChange={(e) => setFieldOverride(field.id, { publicHelpText: e.target.value })}
+              onChange={(e) => patch({ publicHelpText: e.target.value })}
             />
           </label>
         )}
@@ -126,7 +145,7 @@ export function FieldEditor({
             aria-label={`Tooltip for ${field.id}`}
             placeholder="(none)"
             value={field.tooltip ?? ''}
-            onChange={(e) => setFieldOverride(field.id, { tooltip: e.target.value })}
+            onChange={(e) => patch({ tooltip: e.target.value })}
           />
         </label>
 
@@ -140,7 +159,7 @@ export function FieldEditor({
               aria-label={`Public tooltip for ${field.id}`}
               placeholder="(uses the clinical tooltip)"
               value={field.publicTooltip ?? ''}
-              onChange={(e) => setFieldOverride(field.id, { publicTooltip: e.target.value })}
+              onChange={(e) => patch({ publicTooltip: e.target.value })}
             />
           </label>
         )}
@@ -151,24 +170,112 @@ export function FieldEditor({
             className="fe-input fe-select"
             aria-label={`Required setting for ${field.id}`}
             value={requiredValue(field.required)}
-            onChange={(e) => setFieldOverride(field.id, { required: fromRequiredValue(e.target.value) })}
+            onChange={(e) => patch({ required: fromRequiredValue(e.target.value) })}
           >
             <option value="required">Required</option>
             <option value="optional">Optional</option>
             <option value="conditional">Conditional (when shown)</option>
           </select>
         </label>
+
+        {added && (
+          <label className="fe-row">
+            <span className="fe-cap">Shown</span>
+            <select
+              className="fe-input fe-select"
+              aria-label={`Visibility rule for ${field.id}`}
+              value={field.visibleWhen?.length ? 'when' : 'always'}
+              onChange={(e) => {
+                if (e.target.value === 'always') {
+                  setAddedFieldCondition(field.id, null);
+                } else {
+                  const first = eligibleControllers(config, field.id)[0];
+                  if (first?.field.options?.length) {
+                    setAddedFieldCondition(field.id, [
+                      conditionFor(first.field, first.field.options[0].value),
+                    ]);
+                  }
+                }
+              }}
+            >
+              <option value="always">Always</option>
+              <option value="when">Only when another answer matches</option>
+            </select>
+          </label>
+        )}
+
+        {added && cond && (
+          <>
+            <label className="fe-row">
+              <span className="fe-cap">Controlling question</span>
+              <select
+                className="fe-input"
+                aria-label={`Controlling question for ${field.id}`}
+                value={cond.field}
+                onChange={(e) => {
+                  const ctl = eligibleControllers(config, field.id).find(
+                    (c) => c.field.id === e.target.value,
+                  )?.field;
+                  if (ctl?.options?.length) {
+                    setAddedFieldCondition(field.id, [conditionFor(ctl, ctl.options[0].value)]);
+                  }
+                }}
+              >
+                {eligibleControllers(config, field.id).map(({ field: f, sectionTitle }) => (
+                  <option key={f.id} value={f.id}>
+                    {sectionTitle}: {f.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="fe-row">
+              <span className="fe-cap">Shown when the answer is</span>
+              <select
+                className="fe-input"
+                aria-label={`Controlling answer for ${field.id}`}
+                value={cond.equals ?? cond.includes ?? ''}
+                onChange={(e) => {
+                  if (controllerField) {
+                    setAddedFieldCondition(field.id, [conditionFor(controllerField, e.target.value)]);
+                  }
+                }}
+              >
+                {(controllerField?.options ?? []).map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </>
+        )}
+
+        {conditionText(config, field) && (
+          <p className="fe-cond">{conditionText(config, field)}</p>
+        )}
       </div>
 
       <div className="fe-actions">
-        <button
-          type="button"
-          className="btn btn-link"
-          disabled={!modified}
-          onClick={() => resetField(field.id)}
-        >
-          Revert this field
-        </button>
+        {added ? (
+          <ConfirmAction
+            triggerLabel="Remove this question"
+            prompt={`Removing "${field.label}" deletes the question from the form.`}
+            confirmLabel="Remove it"
+            cancelLabel="Keep it"
+            triggerClass="btn btn-link btn-danger"
+            fallbackFocusId="main"
+            onConfirm={() => removeAddedField(field.id)}
+          />
+        ) : (
+          <button
+            type="button"
+            className="btn btn-link"
+            disabled={!modified}
+            onClick={() => resetField(field.id)}
+          >
+            Revert this field
+          </button>
+        )}
       </div>
     </fieldset>
   );

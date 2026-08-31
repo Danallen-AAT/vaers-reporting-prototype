@@ -2,11 +2,14 @@
 // Config store - the low-code layer (Task 1.8).
 //
 // The base form schema (vaersForm) is immutable code. The admin surface writes
-// a sparse *overrides* patch (per-field / per-section content edits) plus FAQ
-// content, both persisted to localStorage. The effective config the whole app
-// renders from is `applyOverrides(base, overrides)`, recomputed reactively - so
-// an admin edit updates the live form with no redeploy. Branching predicates
-// are never touched here, so PRS#1 correctness is unaffected by admin edits.
+// a sparse *overrides* patch (per-field / per-section content edits), a list of
+// admin-created questions with their visibility conditions, and FAQ content,
+// all persisted to localStorage. The effective config the whole app renders
+// from is `applyOverrides(base, overrides)`, recomputed reactively - so an
+// admin edit updates the live form with no redeploy. Conditions are the same
+// declarative predicates the engine already evaluates, so an added question's
+// branching runs through the identical tested path as the base schema's, and
+// the base schema's own predicates stay immutable from this surface.
 // ---------------------------------------------------------------------------
 import {
   createContext,
@@ -19,6 +22,7 @@ import {
   type ReactNode,
 } from 'react';
 import type {
+  Condition,
   FieldConfig,
   FormConfig,
   RequiredRule,
@@ -43,13 +47,20 @@ export interface SectionOverride {
   description?: string;
   publicDescription?: string;
 }
+/** An admin-created question and the section it belongs to. */
+export interface AddedField {
+  sectionId: string;
+  field: FieldConfig;
+}
 export interface ConfigOverrides {
   fields: Record<string, FieldOverride>;
   sections: Record<string, SectionOverride>;
+  /** Questions created through the admin surface, appended to their sections. */
+  added?: AddedField[];
 }
 
 const STORAGE_KEY = 'vaers.admin.v1';
-const emptyOverrides = (): ConfigOverrides => ({ fields: {}, sections: {} });
+const emptyOverrides = (): ConfigOverrides => ({ fields: {}, sections: {}, added: [] });
 
 // --- Override application ---------------------------------------------------
 
@@ -61,11 +72,13 @@ function definedOnly<T extends object>(o: T): Partial<T> {
 
 /** Fold the overrides patch onto the base schema, producing the live config. */
 export function applyOverrides(base: FormConfig, ov: ConfigOverrides): FormConfig {
+  const added = ov.added ?? [];
   return {
     ...base,
     sections: base.sections.map((section) => {
       const so = ov.sections[section.id];
-      const fields = section.fields.map((field) => {
+      const own = added.filter((a) => a.sectionId === section.id).map((a) => a.field);
+      const fields = [...section.fields, ...own].map((field) => {
         const fo = ov.fields[field.id];
         return fo ? { ...field, ...definedOnly(fo) } : field;
       });
@@ -135,7 +148,13 @@ function loadState(): { overrides: ConfigOverrides; faqs: FaqItem[] } {
     return {
       overrides:
         o && typeof o === 'object'
-          ? { fields: o.fields ?? {}, sections: o.sections ?? {} }
+          ? {
+              fields: o.fields ?? {},
+              sections: o.sections ?? {},
+              added: Array.isArray(o.added)
+                ? o.added.filter((a) => a && a.sectionId && a.field && a.field.id)
+                : [],
+            }
           : emptyOverrides(),
       faqs: Array.isArray(parsed.faqs) ? parsed.faqs : defaultFaqs,
     };
@@ -174,6 +193,16 @@ interface ConfigContextValue {
   updateFaq: (id: string, patch: Partial<Omit<FaqItem, 'id'>>) => void;
   removeFaq: (id: string) => void;
   resetAll: () => void;
+  /** Create a question in a section; returns its generated id. */
+  addField: (sectionId: string, spec: Omit<FieldConfig, 'id'>) => string;
+  /** Patch an admin-created question (wording, requiredness, visibility condition). */
+  updateAddedField: (fieldId: string, patch: Partial<Omit<FieldConfig, 'id'>>) => void;
+  /** Remove an admin-created question. Base-schema questions cannot be removed here. */
+  removeAddedField: (fieldId: string) => void;
+  /** True when the field was created through the admin surface. */
+  isFieldAdded: (fieldId: string) => boolean;
+  /** Replace or clear the visibility condition of an admin-created question. */
+  setAddedFieldCondition: (fieldId: string, conds: Condition[] | null) => void;
 }
 
 const ConfigContext = createContext<ConfigContextValue | null>(null);
@@ -265,6 +294,64 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
     setFaqs(defaultFaqs);
   }, []);
 
+  // --- Admin-created questions ---------------------------------------------
+
+  const addField = useCallback(
+    (sectionId: string, spec: Omit<FieldConfig, 'id'>): string => {
+      const slug =
+        (spec.label || 'question')
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '_')
+          .replace(/^_+|_+$/g, '')
+          .slice(0, 40) || 'question';
+      let id = `custom_${slug}`;
+      setOverrides((prev) => {
+        const taken = new Set<string>([
+          ...[...fieldIndex.keys()],
+          ...(prev.added ?? []).map((a) => a.field.id),
+        ]);
+        let n = 2;
+        while (taken.has(id)) id = `custom_${slug}_${n++}`;
+        return { ...prev, added: [...(prev.added ?? []), { sectionId, field: { ...spec, id } }] };
+      });
+      return id;
+    },
+    [fieldIndex],
+  );
+
+  const updateAddedField = useCallback(
+    (fieldId: string, patch: Partial<Omit<FieldConfig, 'id'>>) => {
+      setOverrides((prev) => ({
+        ...prev,
+        added: (prev.added ?? []).map((a) =>
+          a.field.id === fieldId ? { ...a, field: { ...a.field, ...patch } } : a,
+        ),
+      }));
+    },
+    [],
+  );
+
+  const removeAddedField = useCallback((fieldId: string) => {
+    setOverrides((prev) => ({
+      ...prev,
+      added: (prev.added ?? []).filter((a) => a.field.id !== fieldId),
+    }));
+  }, []);
+
+  const setAddedFieldCondition = useCallback(
+    (fieldId: string, conds: Condition[] | null) => {
+      setOverrides((prev) => ({
+        ...prev,
+        added: (prev.added ?? []).map((a) =>
+          a.field.id === fieldId
+            ? { ...a, field: { ...a.field, visibleWhen: conds ?? undefined } }
+            : a,
+        ),
+      }));
+    },
+    [],
+  );
+
   const faqsChanged = useMemo(
     () => JSON.stringify(faqs) !== JSON.stringify(defaultFaqs),
     [faqs],
@@ -272,6 +359,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
   const isCustomized =
     Object.keys(overrides.fields).length > 0 ||
     Object.keys(overrides.sections).length > 0 ||
+    (overrides.added ?? []).length > 0 ||
     faqsChanged;
 
   const value: ConfigContextValue = {
@@ -288,6 +376,11 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
     updateFaq,
     removeFaq,
     resetAll,
+    addField,
+    updateAddedField,
+    removeAddedField,
+    isFieldAdded: (id) => (overrides.added ?? []).some((a) => a.field.id === id),
+    setAddedFieldCondition,
   };
 
   return <ConfigContext.Provider value={value}>{children}</ConfigContext.Provider>;

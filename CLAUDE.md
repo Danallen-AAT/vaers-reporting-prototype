@@ -28,7 +28,7 @@ This is not incidental. It is what makes the low-code admin surface possible: an
    - Public reporter: plain-language wording, clinical-only fields hidden
    - Healthcare provider: clinical fields, plus the vaccine-administration-error-with-no-adverse-event branch that suppresses the entire Adverse Event section
 2. **Intelligent assistance**: inline validation, contextual help text, reactive FAQ panel
-3. **Low-code configuration surface**: an admin screen where a program owner edits a question label, help text, or FAQ entry, and the live form re-renders from configuration
+3. **Low-code configuration surface**: an admin screen where a program owner edits a question label, help text, or FAQ entry, adds a new question point-and-click, and sets the answer that makes it appear; the live form re-renders from configuration
 4. **Section 508 accessibility** built into every component from the start, not retrofitted
 5. **Functional client-side upload** with the Phase 1 document policy (accepted types and size limits as configuration), listing and removal, plus a free-text field; nothing is read, stored, or transmitted
 6. **Document suggestion rules**, for example a provider indicating hospitalization is prompted to attach a discharge summary

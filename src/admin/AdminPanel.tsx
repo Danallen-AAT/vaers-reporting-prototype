@@ -33,9 +33,10 @@ export function AdminPanel({ onSignOut }: { onSignOut?: () => void }) {
           )}
         </div>
         <p className="admin-lede">
-          Edit question labels, help text, requiredness, and FAQs. Changes save to
-          this browser and the live form updates instantly, with no code change
-          and no redeploy. This is how a CDC program owner maintains the form.
+          Edit question labels, help text, requiredness, and FAQs. Add questions
+          and set the answer that makes them appear. Changes save to this browser
+          and the live form updates instantly, with no code change and no
+          redeploy. This is how a CDC program owner maintains the form.
         </p>
         <div className="admin-actions">
           <a className="btn btn-primary" href="#/">

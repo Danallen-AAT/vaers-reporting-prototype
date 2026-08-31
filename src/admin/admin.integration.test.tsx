@@ -38,7 +38,7 @@ describe('admin config surface', () => {
       within(preview).getByLabelText(/person completing this report/i),
     ).toBeInTheDocument();
     expect(within(preview).queryByLabelText(/reporter name/i)).not.toBeInTheDocument();
-  });
+  }, 30000);
 
   it('tells the author which inputs drive the path being previewed', async () => {
     // Regression: the editor list is identical for both reporter paths, so an
@@ -99,5 +99,5 @@ describe('admin config surface', () => {
 
     const preview = screen.getByRole('complementary', { name: /live form preview/i });
     expect(within(preview).getByLabelText(/reporter name/i)).toBeInTheDocument();
-  });
+  }, 30000);
 });

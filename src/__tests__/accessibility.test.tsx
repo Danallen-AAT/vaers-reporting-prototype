@@ -171,6 +171,20 @@ describe('accessibility: admin configuration surface', () => {
     expect(await axe(container, AXE_OPTS)).toHaveNoViolations();
   }, 30000);
 
+  it('has no violations with the add-question form open', async () => {
+    const user = userEvent.setup();
+    const { container } = render(
+      <ConfigProvider>
+        <AdminPanel />
+      </ConfigProvider>,
+    );
+    await user.click(screen.getByRole('button', { name: /add a question to reporter/i }));
+    expect(
+      screen.getByRole('textbox', { name: /label for the new question in reporter/i }),
+    ).toBeInTheDocument();
+    expect(await axe(container, AXE_OPTS)).toHaveNoViolations();
+  }, 30000);
+
   it('has no violations with the reset-all confirmation open', async () => {
     const user = userEvent.setup();
     const { container } = render(
