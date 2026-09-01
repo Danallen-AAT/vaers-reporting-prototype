@@ -1,7 +1,8 @@
 // ---------------------------------------------------------------------------
 // Guards on destructive actions (SC 3.3.4 discipline applied to the app's own
-// chrome). Changing reporter type is non-destructive and shares one behavior
-// with the in-form radio; clearing a report and resetting the admin
+// chrome). Changing reporter type carries every shared answer across and
+// drops answers whose questions exist only on the other path, so stale hidden
+// values cannot drive branching; clearing a report and resetting the admin
 // configuration each require an explicit second confirmation, and cancelling
 // preserves the work.
 // ---------------------------------------------------------------------------
@@ -19,19 +20,40 @@ beforeEach(() => {
 });
 
 describe('changing reporter type', () => {
-  it('is non-destructive: moves to the reporter question and keeps every answer', async () => {
+  it('carries shared answers across an actual switch, in both directions', async () => {
     const user = userEvent.setup();
     render(<App />);
     await user.click(screen.getByRole('radio', { name: 'Patient, parent, or caregiver' }));
     await user.type(screen.getByLabelText(/your name/i), 'Casey Reporter');
 
-    await user.click(screen.getByRole('button', { name: /change reporter type/i }));
+    // Really switch paths, not just focus the question.
+    await user.click(screen.getByRole('radio', { name: 'Healthcare provider' }));
+    expect(screen.getByLabelText(/reporter name/i)).toHaveValue('Casey Reporter');
 
-    // Focus lands on the reporter-type question, nothing is cleared.
-    expect(document.activeElement).toBe(
-      screen.getByRole('radio', { name: 'Patient, parent, or caregiver' }),
-    );
+    await user.click(screen.getByRole('radio', { name: 'Patient, parent, or caregiver' }));
     expect(screen.getByLabelText(/your name/i)).toHaveValue('Casey Reporter');
+  }, 30000);
+
+  it('drops other-path answers so stale hidden values cannot drive branching', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    // Provider: administration error with no adverse event suppresses the AE section.
+    await user.click(screen.getByRole('radio', { name: 'Healthcare provider' }));
+    const errorQuestion = screen.getByRole('group', {
+      name: /reporting a vaccine administration error/i,
+    });
+    await user.click(within(errorQuestion).getByRole('radio', { name: 'Yes' }));
+    const hadAeQuestion = screen.getByRole('group', {
+      name: /did the patient experience any adverse event/i,
+    });
+    await user.click(within(hadAeQuestion).getByRole('radio', { name: 'No' }));
+    expect(screen.queryByRole('heading', { name: 'Adverse event' })).not.toBeInTheDocument();
+
+    // Switching to the public path must not carry the suppression: the error
+    // questions do not exist there, so their answers leave with them.
+    await user.click(screen.getByRole('radio', { name: 'Patient, parent, or caregiver' }));
+    expect(screen.getByRole('heading', { name: 'What happened' })).toBeInTheDocument();
   }, 30000);
 });
 

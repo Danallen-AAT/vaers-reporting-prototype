@@ -19,6 +19,7 @@ import {
   type SectionConfig,
 } from '../config/types';
 import { getReporterPath, getRepeatCount, type ActivePath } from '../formEngine/visibility';
+import { carryAnswersAcross } from '../formEngine/carryAcross';
 import { validateForm, type Errors } from '../formEngine/validation';
 
 interface FormContextValue {
@@ -52,10 +53,11 @@ export function FormProvider({
 
   const setValue = (id: string, value: FormValues[string]) => {
     setValues((prev) => {
-      // Switching reporter type reframes the whole form; drop stale answers from
-      // the other path so branching can't be driven by hidden values.
+      // Switching reporter type reframes the whole form: shared answers carry
+      // across, and answers whose questions exist only on the other path drop
+      // with their questions, so stale hidden values cannot drive branching.
       if (id === 'reporterType' && prev.reporterType !== value) {
-        return { reporterType: value };
+        return carryAnswersAcross(config, prev, value);
       }
       return { ...prev, [id]: value };
     });
