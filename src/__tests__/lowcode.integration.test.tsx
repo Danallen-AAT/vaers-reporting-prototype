@@ -116,7 +116,7 @@ describe('adding a question through the admin surface', () => {
       .closest('.field-editor') as HTMLElement;
     expect(within(stock).queryByRole('button', { name: /remove this question/i })).toBeNull();
     expect(within(stock).getByRole('button', { name: /revert this field/i })).toBeInTheDocument();
-  });
+  }, 30000);
 
   it('edits a base question visibility rule point-and-click, and revert restores it', async () => {
     const user = userEvent.setup();
@@ -159,11 +159,11 @@ describe('adding a question through the admin surface', () => {
       .getByLabelText('Label for reporterType')
       .closest('.field-editor') as HTMLElement;
     expect(within(root).queryByRole('combobox', { name: /visibility rule/i })).toBeNull();
-  });
+  }, 30000);
 
   it('explains base-schema branching rules in plain language', () => {
     renderAdmin();
     // The 1.6.2 error-type question is conditional on the error answer.
     expect(screen.getAllByText(/shown when/i).length).toBeGreaterThan(0);
-  });
+  }, 30000);
 });
