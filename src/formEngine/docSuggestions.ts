@@ -7,8 +7,8 @@
 // them the same way it edits labels. Pure functions, no React, so the rules are
 // unit-testable on their own.
 // ---------------------------------------------------------------------------
-import type { Condition, FormValues } from '../config/types';
-import { evalConditions } from './visibility';
+import type { Condition, FormConfig, FormValues } from '../config/types';
+import { evalConditions, visibleFieldIds } from './visibility';
 
 export interface DocSuggestionRule {
   id: string;
@@ -63,6 +63,23 @@ export interface DocSuggestion {
   id: string;
   document: string;
   why: string;
+}
+
+/**
+ * Answers to the questions actually on screen. A suppressed question's answer
+ * must not drive a suggestion: a provider reporting an administration error
+ * with no adverse event has no Adverse Event section, so nothing inside it can
+ * still recommend a discharge summary.
+ */
+export function answersOnScreen(config: FormConfig, values: FormValues): FormValues {
+  const visible = visibleFieldIds(config, values);
+  const onScreen: FormValues = {};
+  for (const [key, value] of Object.entries(values)) {
+    // Repeated instances store under `${fieldId}__${instance}`.
+    const base = key.replace(/__\d+$/, '');
+    if (visible.has(key) || visible.has(base)) onScreen[key] = value;
+  }
+  return onScreen;
 }
 
 /** The documents to suggest for the current answers, in rule order. */

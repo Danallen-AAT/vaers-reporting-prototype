@@ -29,6 +29,7 @@ import type {
   SectionConfig,
 } from '../config/types';
 import { vaersForm } from '../config/vaersForm';
+import { checkConfiguration, type ConfigCheckResult } from '../formEngine/configCheck';
 import { defaultFaqs, type FaqItem } from '../config/faqs';
 
 export interface FieldOverride {
@@ -195,6 +196,28 @@ function makeFaqId(): string {
   return `faq-${Date.now().toString(36)}`;
 }
 
+/** The overrides that a visibility-rule change would produce, without applying them. */
+function withFieldCondition(
+  prev: ConfigOverrides,
+  fieldId: string,
+  conds: Condition[] | null,
+): ConfigOverrides {
+  if ((prev.added ?? []).some((a) => a.field.id === fieldId)) {
+    return {
+      ...prev,
+      added: (prev.added ?? []).map((a) =>
+        a.field.id === fieldId
+          ? { ...a, field: { ...a.field, visibleWhen: conds ?? undefined } }
+          : a,
+      ),
+    };
+  }
+  return {
+    ...prev,
+    fields: { ...prev.fields, [fieldId]: { ...(prev.fields[fieldId] ?? {}), visibleWhen: conds } },
+  };
+}
+
 // --- Context ----------------------------------------------------------------
 
 interface ConfigContextValue {
@@ -222,8 +245,21 @@ interface ConfigContextValue {
   isFieldAdded: (fieldId: string) => boolean;
   /** Replace or clear the visibility condition of an admin-created question. */
   setAddedFieldCondition: (fieldId: string, conds: Condition[] | null) => void;
-  /** Replace or clear the visibility rule of any question, base or added. */
-  setFieldCondition: (fieldId: string, conds: Condition[] | null) => void;
+  /**
+   * Replace or clear the visibility rule of any question, base or added.
+   * Refused, with a plain-language reason, when the rule would break the
+   * configuration (PRS#1): the change is checked against the whole decision
+   * matrix before it is accepted, so a contradiction never reaches the form.
+   */
+  setFieldCondition: (fieldId: string, conds: Condition[] | null) => ConditionResult;
+  /** Live integrity check of the configuration now on screen. */
+  configCheck: ConfigCheckResult;
+}
+
+export interface ConditionResult {
+  ok: boolean;
+  /** Why the change was refused, written for a program officer. */
+  reason?: string;
 }
 
 const ConfigContext = createContext<ConfigContextValue | null>(null);
@@ -249,6 +285,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
   }, [overrides, faqs]);
 
   const config = useMemo(() => applyOverrides(vaersForm, overrides), [overrides]);
+  const configCheck = useMemo(() => checkConfiguration(config), [config]);
 
   const setFieldOverride = useCallback(
     (fieldId: string, patch: FieldOverride) => {
@@ -402,9 +439,20 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
     removeAddedField,
     isFieldAdded: (id) => (overrides.added ?? []).some((a) => a.field.id === id),
     setAddedFieldCondition,
+    configCheck,
     setFieldCondition: (id, conds) => {
+      // Check the whole matrix before accepting the edit. Only issues this
+      // change would introduce block it; anything already outstanding is not
+      // held against the author.
+      const candidate = applyOverrides(vaersForm, withFieldCondition(overrides, id, conds));
+      const introduced = checkConfiguration(candidate).issues.filter(
+        (next) =>
+          !configCheck.issues.some((now) => now.code === next.code && now.target === next.target),
+      );
+      if (introduced.length > 0) return { ok: false, reason: introduced[0].message };
       if ((overrides.added ?? []).some((a) => a.field.id === id)) setAddedFieldCondition(id, conds);
       else setFieldOverride(id, { visibleWhen: conds });
+      return { ok: true };
     },
   };
 

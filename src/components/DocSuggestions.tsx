@@ -4,11 +4,12 @@
 // Announced politely to screen readers so it does not interrupt typing.
 // ---------------------------------------------------------------------------
 import { useForm } from '../state/FormContext';
-import { getDocSuggestions } from '../formEngine/docSuggestions';
+import { answersOnScreen, getDocSuggestions } from '../formEngine/docSuggestions';
 
 export function DocSuggestions() {
-  const { values } = useForm();
-  const suggestions = getDocSuggestions(values);
+  const { config, values } = useForm();
+  // Suggestions follow the live instrument, not retained answers.
+  const suggestions = getDocSuggestions(answersOnScreen(config, values));
 
   if (suggestions.length === 0) return null;
 

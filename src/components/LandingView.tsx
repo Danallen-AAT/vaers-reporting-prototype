@@ -104,12 +104,17 @@ export function LandingView() {
             <span className="lt-title">Start a report</span>
             <span className="lt-body">Go straight to the reporting form.</span>
           </a>
-          <span className="link-tile is-placeholder">
+          <a
+            className="link-tile"
+            href="https://vaers.hhs.gov/data.html"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             <span className="lt-title">Download VAERS data</span>
             <span className="lt-body">
-              Public de-identified data sets. Not implemented in this prototype.
+              Public de-identified data sets on the VAERS site. Opens in a new tab.
             </span>
-          </span>
+          </a>
         </div>
 
         <div className="nav-survey-prompt">

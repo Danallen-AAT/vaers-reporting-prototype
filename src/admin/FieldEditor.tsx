@@ -7,6 +7,7 @@
 // happen, and reasonably conclude the editor is broken. Nothing is hidden;
 // fields and inputs that do not affect the current preview are marked instead.
 // ---------------------------------------------------------------------------
+import { useState } from 'react';
 import type { FieldConfig, RequiredRule } from '../config/types';
 import { ConfirmAction } from '../components/ConfirmAction';
 import { useConfig, type FieldOverride } from '../state/ConfigStore';
@@ -58,6 +59,8 @@ export function FieldEditor({
     field.id !== 'reporterType' &&
     !field.suppressWhen?.length &&
     (field.visibleWhen?.length ?? 0) <= 1;
+  // A refused rule change, explained where the author is looking.
+  const [refused, setRefused] = useState<string | null>(null);
   const showPublic = field.path !== 'provider';
 
   // Does this field appear at all in the path currently being previewed?
@@ -195,13 +198,14 @@ export function FieldEditor({
               value={field.visibleWhen?.length ? 'when' : 'always'}
               onChange={(e) => {
                 if (e.target.value === 'always') {
-                  setFieldCondition(field.id, null);
+                  setRefused(setFieldCondition(field.id, null).reason ?? null);
                 } else {
                   const first = eligibleControllers(config, field.id)[0];
                   if (first?.field.options?.length) {
-                    setFieldCondition(field.id, [
+                    const r = setFieldCondition(field.id, [
                       conditionFor(first.field, first.field.options[0].value),
                     ]);
+                    setRefused(r.reason ?? null);
                   }
                 }
               }}
@@ -210,6 +214,12 @@ export function FieldEditor({
               <option value="when">Only when another answer matches</option>
             </select>
           </label>
+        )}
+
+        {refused && (
+          <p className="fe-refused" role="alert">
+            <strong>Change not applied.</strong> {refused}
+          </p>
         )}
 
         {conditionEditable && cond && (
@@ -225,7 +235,10 @@ export function FieldEditor({
                     (c) => c.field.id === e.target.value,
                   )?.field;
                   if (ctl?.options?.length) {
-                    setFieldCondition(field.id, [conditionFor(ctl, ctl.options[0].value)]);
+                    const r = setFieldCondition(field.id, [
+                      conditionFor(ctl, ctl.options[0].value),
+                    ]);
+                    setRefused(r.reason ?? null);
                   }
                 }}
               >
@@ -244,7 +257,10 @@ export function FieldEditor({
                 value={cond.equals ?? cond.includes ?? ''}
                 onChange={(e) => {
                   if (controllerField) {
-                    setFieldCondition(field.id, [conditionFor(controllerField, e.target.value)]);
+                    const r = setFieldCondition(field.id, [
+                      conditionFor(controllerField, e.target.value),
+                    ]);
+                    setRefused(r.reason ?? null);
                   }
                 }}
               >

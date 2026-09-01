@@ -1532,3 +1532,35 @@ legend.field-label .tip-toggle {
   padding: 0.25rem 0.7rem;
   font-size: 0.86rem;
 }
+
+/* Configuration integrity check and refused rule edits (PRS#1). */
+.config-check {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+.config-check.is-ok {
+  border-color: #1a7f5a;
+  background: #f2fbf7;
+  color: #10503a;
+}
+.config-check.is-bad {
+  border-color: #a3231b;
+  background: #fdf3f2;
+  color: #7d1b15;
+}
+.config-check-list {
+  margin: 6px 0 0;
+  padding-left: 20px;
+}
+.fe-refused {
+  margin: 6px 0 0;
+  padding: 8px 10px;
+  border-left: 3px solid #a3231b;
+  background: #fdf3f2;
+  color: #7d1b15;
+  font-size: 0.87rem;
+}

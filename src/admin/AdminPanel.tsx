@@ -15,7 +15,7 @@ import { SectionEditor } from './SectionEditor';
 import { FaqEditor } from './FaqEditor';
 
 export function AdminPanel({ onSignOut }: { onSignOut?: () => void }) {
-  const { config, isCustomized, resetAll } = useConfig();
+  const { config, isCustomized, resetAll, configCheck } = useConfig();
   const [previewPath, setPreviewPath] = useState<'public' | 'provider'>('provider');
 
   return (
@@ -59,6 +59,32 @@ export function AdminPanel({ onSignOut }: { onSignOut?: () => void }) {
             <span className="badge badge-quiet" role="status">
               Default configuration
             </span>
+          )}
+        </div>
+
+        <div
+          className={`config-check ${configCheck.ok ? 'is-ok' : 'is-bad'}`}
+          role="status"
+          aria-label="Configuration check"
+        >
+          <strong>Configuration check</strong>{' '}
+          {configCheck.ok ? (
+            <>
+              passed. Every question can still be reached: {configCheck.fieldsChecked} questions
+              tested against {configCheck.combinations} answer combinations generated from the
+              branching rules themselves.
+            </>
+          ) : (
+            <>
+              found {configCheck.issues.length}{' '}
+              {configCheck.issues.length === 1 ? 'problem' : 'problems'} across{' '}
+              {configCheck.combinations} answer combinations:
+              <ul className="config-check-list">
+                {configCheck.issues.map((issue) => (
+                  <li key={`${issue.code}-${issue.target}`}>{issue.message}</li>
+                ))}
+              </ul>
+            </>
           )}
         </div>
       </div>
