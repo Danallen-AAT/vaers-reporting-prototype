@@ -193,7 +193,7 @@ describe('accessibility: admin configuration surface', () => {
       </ConfigProvider>,
     );
     // Customize first so the guarded reset control is enabled.
-    await user.type(screen.getAllByRole('textbox')[0], ' X');
+    await user.type(screen.getByLabelText('Label for reporterName'), ' X');
     await user.click(screen.getByRole('button', { name: 'Reset all to defaults' }));
     expect(
       screen.getByRole('group', { name: /removes every customization/i }),

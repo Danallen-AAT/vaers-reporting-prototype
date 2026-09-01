@@ -14,8 +14,22 @@ import { FormRenderer } from '../components/FormRenderer';
 import { SectionEditor } from './SectionEditor';
 import { FaqEditor } from './FaqEditor';
 
-export function AdminPanel({ onSignOut }: { onSignOut?: () => void }) {
-  const { config, isCustomized, resetAll, configCheck } = useConfig();
+export function AdminPanel({ onSignOut, user }: { onSignOut?: () => void; user?: string }) {
+  const {
+    draftConfig,
+    isCustomized,
+    resetAll,
+    configCheck,
+    hasDraftChanges,
+    publish,
+    discardDraft,
+    restoreVersion,
+    history,
+  } = useConfig();
+  const [changeLabel, setChangeLabel] = useState('');
+  const [publishError, setPublishError] = useState<string | null>(null);
+  const [publishedNote, setPublishedNote] = useState<string | null>(null);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [previewPath, setPreviewPath] = useState<'public' | 'provider'>('provider');
 
   return (
@@ -89,6 +103,108 @@ export function AdminPanel({ onSignOut }: { onSignOut?: () => void }) {
         </div>
       </div>
 
+      <div className="wrap">
+        <section className="publish-bar" aria-labelledby="publish-title">
+          <div className="publish-head">
+            <h2 id="publish-title" className="publish-title">
+              Draft and publishing
+            </h2>
+            <span
+              className={`badge ${hasDraftChanges ? 'badge-mod' : 'badge-quiet'}`}
+              role="status"
+            >
+              {hasDraftChanges ? 'Unpublished changes' : 'Draft matches what is live'}
+            </span>
+          </div>
+          <p className="publish-lede">
+            Edits are saved to a draft. Reporters keep seeing the published form until
+            someone publishes, and every publish is recorded with who made it and why.
+          </p>
+          <div className="publish-actions">
+            <label className="publish-label">
+              <span className="fe-cap">Describe this change</span>
+              <input
+                className="fe-input"
+                aria-label="Describe this change"
+                value={changeLabel}
+                placeholder="For example: plainer wording on the vaccine questions"
+                onChange={(e) => setChangeLabel(e.target.value)}
+              />
+            </label>
+            <button
+              type="button"
+              className="btn btn-primary"
+              disabled={!hasDraftChanges}
+              onClick={() => {
+                const r = publish(changeLabel, user ?? 'cdc.program.owner');
+                setPublishError(r.reason ?? null);
+                if (r.ok) {
+                  setPublishedNote('Published. Reporters now see this version.');
+                  setChangeLabel('');
+                } else {
+                  setPublishedNote(null);
+                }
+              }}
+            >
+              Publish to the live form
+            </button>
+            <ConfirmAction
+              triggerLabel="Discard draft"
+              triggerClass="btn btn-outline"
+              prompt="This throws away every unpublished edit and starts again from the published form."
+              confirmLabel="Discard it"
+              cancelLabel="Keep editing"
+              onConfirm={() => {
+                discardDraft();
+                setPublishError(null);
+                setPublishedNote(null);
+              }}
+              disabled={!hasDraftChanges}
+              fallbackFocusId="main"
+            />
+          </div>
+          {publishError && (
+            <p className="fe-refused" role="alert">
+              <strong>Not published.</strong> {publishError}
+            </p>
+          )}
+          {publishedNote && !hasDraftChanges && (
+            <p className="publish-ok" role="status">
+              {publishedNote}
+            </p>
+          )}
+
+          <button
+            type="button"
+            className="btn btn-link"
+            aria-expanded={historyOpen}
+            onClick={() => setHistoryOpen((v) => !v)}
+          >
+            {historyOpen ? 'Hide' : 'Show'} publish history ({history.length})
+          </button>
+          {historyOpen && (
+            <ol className="publish-history">
+              {history.length === 0 && <li className="publish-empty">Nothing published yet.</li>}
+              {history.map((v) => (
+                <li key={v.id}>
+                  <span className="ph-label">{v.label}</span>
+                  <span className="ph-meta">
+                    {new Date(v.at).toLocaleString()} by {v.by}
+                  </span>
+                  <button
+                    type="button"
+                    className="btn btn-link"
+                    onClick={() => restoreVersion(v.id)}
+                  >
+                    Load into draft
+                  </button>
+                </li>
+              ))}
+            </ol>
+          )}
+        </section>
+      </div>
+
       <div className="wrap admin-layout">
         <div className="admin-editor">
           <div className="editor-head">
@@ -100,7 +216,7 @@ export function AdminPanel({ onSignOut }: { onSignOut?: () => void }) {
               right.
             </p>
           </div>
-          {config.sections.map((section, i) => (
+          {draftConfig.sections.map((section, i) => (
             <SectionEditor
               key={section.id}
               section={section}
@@ -134,11 +250,15 @@ export function AdminPanel({ onSignOut }: { onSignOut?: () => void }) {
             </div>
           </div>
           <p className="preview-note">
-            Rendered by the same engine as the public form. Reflects your edits as
-            you type.
+            Rendered by the same engine as the public form, showing the draft as you
+            edit it. Reporters keep seeing the published version until you publish.
           </p>
           <div className="preview-frame">
-            <FormProvider key={previewPath} config={config} initialValues={{ reporterType: previewPath }}>
+            <FormProvider
+              key={previewPath}
+              config={draftConfig}
+              initialValues={{ reporterType: previewPath }}
+            >
               <FormRenderer />
             </FormProvider>
           </div>

@@ -34,7 +34,7 @@ export function FieldEditor({
   previewPath: 'public' | 'provider';
 }) {
   const {
-    config,
+    draftConfig: config,
     setFieldOverride,
     resetField,
     isFieldModified,
@@ -42,6 +42,9 @@ export function FieldEditor({
     updateAddedField,
     removeAddedField,
     setFieldCondition,
+    moveField,
+    sectionOf,
+    isFieldMoved,
   } = useConfig();
   const modified = isFieldModified(field.id);
   const added = isFieldAdded(field.id);
@@ -188,6 +191,25 @@ export function FieldEditor({
             <option value="conditional">Conditional (when shown)</option>
           </select>
         </label>
+
+        <label className="fe-row">
+          <span className="fe-cap">Section</span>
+          <select
+            className="fe-input fe-select"
+            aria-label={`Section for ${field.id}`}
+            value={sectionOf(field.id) ?? ''}
+            onChange={(e) => setRefused(moveField(field.id, e.target.value).reason ?? null)}
+          >
+            {config.sections.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.title}
+              </option>
+            ))}
+          </select>
+        </label>
+        {isFieldMoved(field.id) && (
+          <p className="fe-note">Moved from the section it shipped in. Revert returns it.</p>
+        )}
 
         {conditionEditable && (
           <label className="fe-row">

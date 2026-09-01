@@ -5,7 +5,7 @@
 import { useConfig } from '../state/ConfigStore';
 
 export function FaqEditor() {
-  const { faqs, addFaq, updateFaq, removeFaq } = useConfig();
+  const { draftFaqs: faqs, addFaq, updateFaq, removeFaq } = useConfig();
 
   return (
     <details className="section-editor" >

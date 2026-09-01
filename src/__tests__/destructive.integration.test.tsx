@@ -100,7 +100,8 @@ describe('admin reset all to defaults', () => {
         <AdminPanel />
       </ConfigProvider>,
     );
-    const box = screen.getAllByRole('textbox')[0];
+    // A real question label, not whichever textbox happens to render first.
+    const box = screen.getByLabelText('Label for reporterName');
     await user.type(box, ' X');
     expect(screen.getByText('Customized')).toBeInTheDocument();
   }

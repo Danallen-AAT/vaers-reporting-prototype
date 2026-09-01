@@ -1564,3 +1564,40 @@ legend.field-label .tip-toggle {
   color: #7d1b15;
   font-size: 0.87rem;
 }
+
+.fe-note {
+  margin: 4px 0 0;
+  font-size: 0.82rem;
+  color: #4a4a4a;
+  font-style: italic;
+}
+
+/* Draft and publishing (PWS 1.8): deliberate change control on a live form. */
+.publish-bar {
+  margin: 14px 0 0;
+  padding: 14px 16px;
+  border: 1px solid #c9cdd4;
+  border-radius: 8px;
+  background: #fafbfc;
+}
+.publish-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.publish-title { font-size: 1rem; margin: 0; }
+.publish-lede { margin: 6px 0 10px; font-size: 0.9rem; color: #3c3c3c; }
+.publish-actions {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+.publish-label { display: flex; flex-direction: column; gap: 4px; min-width: 18rem; flex: 1 1 18rem; }
+.publish-ok { margin: 8px 0 0; color: #10503a; font-size: 0.88rem; }
+.publish-history { margin: 8px 0 0; padding-left: 20px; font-size: 0.88rem; }
+.publish-history li { margin: 4px 0; }
+.ph-label { font-weight: 600; }
+.ph-meta { color: #4a4a4a; margin-left: 8px; }
+.publish-empty { list-style: none; margin-left: -20px; color: #4a4a4a; }

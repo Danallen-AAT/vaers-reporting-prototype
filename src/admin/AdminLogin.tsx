@@ -5,7 +5,7 @@
 // ---------------------------------------------------------------------------
 import { useState } from 'react';
 
-export function AdminLogin({ onSignIn }: { onSignIn: () => void }) {
+export function AdminLogin({ onSignIn }: { onSignIn: (user: string) => void }) {
   const [user, setUser] = useState('cdc.program.owner');
 
   return (
@@ -14,7 +14,7 @@ export function AdminLogin({ onSignIn }: { onSignIn: () => void }) {
         className="login-card"
         onSubmit={(e) => {
           e.preventDefault();
-          onSignIn();
+          onSignIn(user.trim() || 'cdc.program.owner');
         }}
       >
         <p className="eyebrow">Admin · configuration surface</p>

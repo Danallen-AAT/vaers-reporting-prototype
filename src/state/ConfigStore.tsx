@@ -65,10 +65,31 @@ export interface ConfigOverrides {
   sections: Record<string, SectionOverride>;
   /** Questions created through the admin surface, appended to their sections. */
   added?: AddedField[];
+  /**
+   * Questions relocated to a different section, as question id to section id.
+   * Membership is the only thing this changes: the question keeps its wording,
+   * its rule and its identity, so a relocation cannot alter what it collects.
+   */
+  moved?: Record<string, string>;
 }
 
 const STORAGE_KEY = 'vaers.admin.v1';
-const emptyOverrides = (): ConfigOverrides => ({ fields: {}, sections: {}, added: [] });
+const DRAFT_KEY = 'vaers.admin.draft.v1';
+const HISTORY_KEY = 'vaers.admin.history.v1';
+
+/** One published version, kept so a program office can see and undo its own history. */
+export interface PublishedVersion {
+  id: string;
+  /** What the publisher called this change. */
+  label: string;
+  /** ISO timestamp of the publish. */
+  at: string;
+  /** Who published it, from the signed-in admin session. */
+  by: string;
+  overrides: ConfigOverrides;
+  faqs: FaqItem[];
+}
+const emptyOverrides = (): ConfigOverrides => ({ fields: {}, sections: {}, added: [], moved: {} });
 
 // --- Override application ---------------------------------------------------
 
@@ -81,12 +102,22 @@ function definedOnly<T extends object>(o: T): Partial<T> {
 /** Fold the overrides patch onto the base schema, producing the live config. */
 export function applyOverrides(base: FormConfig, ov: ConfigOverrides): FormConfig {
   const added = ov.added ?? [];
+  const moved = ov.moved ?? {};
+  // Where every question lives once relocations are applied.
+  const homeOf = (fieldId: string, original: string) => moved[fieldId] ?? original;
+  const basePlaces = base.sections.flatMap((s) =>
+    s.fields.map((field) => ({ home: homeOf(field.id, s.id), field })),
+  );
+  const addedPlaces = added.map((a) => ({ home: homeOf(a.field.id, a.sectionId), field: a.field }));
+  const places = [...basePlaces, ...addedPlaces];
   return {
     ...base,
     sections: base.sections.map((section) => {
       const so = ov.sections[section.id];
-      const own = added.filter((a) => a.sectionId === section.id).map((a) => a.field);
-      const fields = [...section.fields, ...own].map((field) => {
+      const fields = places
+        .filter((p) => p.home === section.id)
+        .map((p) => p.field)
+        .map((field) => {
         const fo = ov.fields[field.id];
         if (!fo) return field;
         const { visibleWhen, ...rest } = fo;
@@ -159,6 +190,37 @@ interface StoredState {
   faqs: FaqItem[];
 }
 
+function readSnapshot(key: string): { overrides: ConfigOverrides; faqs: FaqItem[] } | null {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<StoredState>;
+    const o = parsed.overrides;
+    if (!o || typeof o !== 'object') return null;
+    return {
+      overrides: {
+        fields: o.fields ?? {},
+        sections: o.sections ?? {},
+        added: Array.isArray(o.added) ? o.added.filter((a) => a && a.sectionId && a.field?.id) : [],
+        moved: o.moved ?? {},
+      },
+      faqs: Array.isArray(parsed.faqs) ? parsed.faqs : defaultFaqs,
+    };
+  } catch {
+    return null;
+  }
+}
+
+function loadHistory(): PublishedVersion[] {
+  try {
+    const raw = localStorage.getItem(HISTORY_KEY);
+    const parsed = raw ? (JSON.parse(raw) as PublishedVersion[]) : [];
+    return Array.isArray(parsed) ? parsed.filter((v) => v && v.id && v.at) : [];
+  } catch {
+    return [];
+  }
+}
+
 function loadState(): { overrides: ConfigOverrides; faqs: FaqItem[] } {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -174,6 +236,7 @@ function loadState(): { overrides: ConfigOverrides; faqs: FaqItem[] } {
               added: Array.isArray(o.added)
                 ? o.added.filter((a) => a && a.sectionId && a.field && a.field.id)
                 : [],
+              moved: o.moved ?? {},
             }
           : emptyOverrides(),
       faqs: Array.isArray(parsed.faqs) ? parsed.faqs : defaultFaqs,
@@ -252,8 +315,34 @@ interface ConfigContextValue {
    * matrix before it is accepted, so a contradiction never reaches the form.
    */
   setFieldCondition: (fieldId: string, conds: Condition[] | null) => ConditionResult;
-  /** Live integrity check of the configuration now on screen. */
+  /** Live integrity check of the draft now being edited. */
   configCheck: ConfigCheckResult;
+  /** The draft the configuration screen edits and previews. */
+  draftConfig: FormConfig;
+  /** FAQ content in the draft. */
+  draftFaqs: FaqItem[];
+  /** True when the draft differs from what is published. */
+  hasDraftChanges: boolean;
+  /**
+   * Make the draft live. Refused when the draft does not pass its own
+   * integrity check, so a broken configuration cannot reach reporters.
+   */
+  publish: (label: string, by: string) => ConditionResult;
+  /** Throw the draft away and start again from what is published. */
+  discardDraft: () => void;
+  /** Load a previously published version back into the draft. */
+  restoreVersion: (versionId: string) => void;
+  /** Publish history, newest first. */
+  history: PublishedVersion[];
+  /**
+   * Move a question to another section. Checked the same way a rule change is,
+   * so a relocation that would strand the question is refused with a reason.
+   */
+  moveField: (fieldId: string, sectionId: string) => ConditionResult;
+  /** The section a question sits in now, after any relocation. */
+  sectionOf: (fieldId: string) => string | undefined;
+  /** True when the question has been moved out of the section it shipped in. */
+  isFieldMoved: (fieldId: string) => boolean;
 }
 
 export interface ConditionResult {
@@ -266,8 +355,13 @@ const ConfigContext = createContext<ConfigContextValue | null>(null);
 
 export function ConfigProvider({ children }: { children: ReactNode }) {
   const initial = useRef(loadState());
-  const [overrides, setOverrides] = useState<ConfigOverrides>(initial.current.overrides);
-  const [faqs, setFaqs] = useState<FaqItem[]>(initial.current.faqs);
+  const initialDraft = useRef(readSnapshot(DRAFT_KEY) ?? initial.current);
+  // `overrides` / `faqs` are the DRAFT the admin edits. `published` is what the
+  // reporting form renders, and only a publish moves one to the other.
+  const [overrides, setOverrides] = useState<ConfigOverrides>(initialDraft.current.overrides);
+  const [faqs, setFaqs] = useState<FaqItem[]>(initialDraft.current.faqs);
+  const [published, setPublished] = useState(initial.current);
+  const [history, setHistory] = useState<PublishedVersion[]>(() => loadHistory());
 
   const fieldIndex = useMemo(() => {
     const m = new Map<string, FieldConfig>();
@@ -281,11 +375,32 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    saveState({ version: vaersForm.version, overrides, faqs });
-  }, [overrides, faqs]);
+    saveState({ version: vaersForm.version, overrides: published.overrides, faqs: published.faqs });
+  }, [published]);
 
-  const config = useMemo(() => applyOverrides(vaersForm, overrides), [overrides]);
-  const configCheck = useMemo(() => checkConfiguration(config), [config]);
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        DRAFT_KEY,
+        JSON.stringify({ version: vaersForm.version, overrides, faqs }),
+      );
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+    } catch {
+      /* localStorage unavailable or full, non-fatal for the demo. */
+    }
+  }, [overrides, faqs, history]);
+
+  /** What the reporting form renders: the published configuration. */
+  const config = useMemo(() => applyOverrides(vaersForm, published.overrides), [published]);
+  /** What the configuration screen edits and previews. */
+  const draftConfig = useMemo(() => applyOverrides(vaersForm, overrides), [overrides]);
+  const configCheck = useMemo(() => checkConfiguration(draftConfig), [draftConfig]);
+  const hasDraftChanges = useMemo(
+    () =>
+      JSON.stringify({ o: overrides, f: faqs }) !==
+      JSON.stringify({ o: published.overrides, f: published.faqs }),
+    [overrides, faqs, published],
+  );
 
   const setFieldOverride = useCallback(
     (fieldId: string, patch: FieldOverride) => {
@@ -321,10 +436,13 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
 
   const resetField = useCallback((fieldId: string) => {
     setOverrides((prev) => {
-      if (!prev.fields[fieldId]) return prev;
+      const moved = { ...(prev.moved ?? {}) };
+      const wasMoved = fieldId in moved;
+      if (!prev.fields[fieldId] && !wasMoved) return prev;
       const fields = { ...prev.fields };
       delete fields[fieldId];
-      return { ...prev, fields };
+      delete moved[fieldId];
+      return { ...prev, fields, moved };
     });
   }, []);
 
@@ -415,6 +533,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
     [faqs],
   );
   const isCustomized =
+    Object.keys(overrides.moved ?? {}).length > 0 ||
     Object.keys(overrides.fields).length > 0 ||
     Object.keys(overrides.sections).length > 0 ||
     (overrides.added ?? []).length > 0 ||
@@ -440,6 +559,58 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
     isFieldAdded: (id) => (overrides.added ?? []).some((a) => a.field.id === id),
     setAddedFieldCondition,
     configCheck,
+    draftConfig,
+    draftFaqs: faqs,
+    hasDraftChanges,
+    history,
+    publish: (label, by) => {
+      const check = checkConfiguration(draftConfig);
+      if (!check.ok) {
+        return {
+          ok: false,
+          reason: `The draft does not pass its own check, so it cannot go live. ${check.issues[0].message}`,
+        };
+      }
+      const entry: PublishedVersion = {
+        id: `v${Date.now().toString(36)}`,
+        label: label.trim() || 'Untitled change',
+        at: new Date().toISOString(),
+        by: by || 'Unknown',
+        overrides,
+        faqs,
+      };
+      setPublished({ overrides, faqs });
+      setHistory((prev) => [entry, ...prev].slice(0, 50));
+      return { ok: true };
+    },
+    discardDraft: () => {
+      setOverrides(published.overrides);
+      setFaqs(published.faqs);
+    },
+    restoreVersion: (versionId) => {
+      const v = history.find((h) => h.id === versionId);
+      if (!v) return;
+      setOverrides(v.overrides);
+      setFaqs(v.faqs);
+    },
+    sectionOf: (id) => draftConfig.sections.find((s) => s.fields.some((f) => f.id === id))?.id,
+    isFieldMoved: (id) => id in (overrides.moved ?? {}),
+    moveField: (id, sectionId) => {
+      const candidate = applyOverrides(vaersForm, {
+        ...overrides,
+        moved: { ...(overrides.moved ?? {}), [id]: sectionId },
+      });
+      const introduced = checkConfiguration(candidate).issues.filter(
+        (next) =>
+          !configCheck.issues.some((now) => now.code === next.code && now.target === next.target),
+      );
+      if (introduced.length > 0) return { ok: false, reason: introduced[0].message };
+      setOverrides((prev) => ({
+        ...prev,
+        moved: { ...(prev.moved ?? {}), [id]: sectionId },
+      }));
+      return { ok: true };
+    },
     setFieldCondition: (id, conds) => {
       // Check the whole matrix before accepting the edit. Only issues this
       // change would introduce block it; anything already outstanding is not
