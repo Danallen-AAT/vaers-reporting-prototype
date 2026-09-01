@@ -28,6 +28,15 @@ describe('configuration integrity check', () => {
     const result = checkConfiguration(vaersForm);
     expect(result.combinations).toBeGreaterThan(1);
     expect(result.fieldsChecked).toBeGreaterThan(20);
+    expect(result.truncated).toBe(false);
+  });
+
+  it('matches the matrix figures quoted in Volume I, Tab 2-2', () => {
+    // Volume I prints these two numbers. They are asserted here so the
+    // quotation cannot drift away from what the code actually does.
+    const result = checkConfiguration(vaersForm);
+    expect(result.fieldsChecked).toBe(41);
+    expect(result.combinations).toBe(324);
   });
 
   it('catches a rule pointing at a question that does not exist', () => {

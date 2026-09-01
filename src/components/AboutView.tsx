@@ -155,7 +155,7 @@ publicLabel: 'Lot number on the vaccine record'  // public`}
 
       <Section id="verified" title="What has been verified">
         <ul>
-          <li><strong>132 automated tests across 19 files</strong>, run on every change. They cover
+          <li><strong>142 automated tests across 21 files</strong>, run on every change. They cover
             the branching matrix for both paths, the suppression rule, repeatable vaccine groups,
             validation, configuration overrides, completion progress, the mapping boundary, and
             accessibility.</li>
@@ -163,7 +163,7 @@ publicLabel: 'Lot number on the vaccine record'  // public`}
             passed, exercising actual key events rather than inspecting markup.</li>
           <li><strong>Performance, measured on the deployed build with a cold cache.</strong> 0.43
             seconds on broadband and under 0.9 seconds on Fast 3G with a 4x CPU slowdown, across 4
-            requests and 91 kilobytes. The requirement is 3 seconds. The measurement script is in
+            requests and 93 kilobytes. The requirement is 3 seconds. The measurement script is in
             the repository at <code>verification/perf.mjs</code>, so the figure can be re-run
             rather than taken on trust.</li>
           <li><strong>Accessibility.</strong> Zero automated violations across fifteen interface
