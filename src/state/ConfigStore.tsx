@@ -40,6 +40,13 @@ export interface FieldOverride {
   publicTooltip?: string;
   placeholder?: string;
   required?: RequiredRule;
+  /**
+   * Visibility rule override for a base-schema question (Amendment 1 Q&A 165):
+   * a Condition[] replaces the base rule, null clears it (always shown),
+   * undefined leaves the base rule untouched. Reverting the field restores
+   * the base rule, exactly like every other override.
+   */
+  visibleWhen?: Condition[] | null;
 }
 export interface SectionOverride {
   title?: string;
@@ -80,7 +87,14 @@ export function applyOverrides(base: FormConfig, ov: ConfigOverrides): FormConfi
       const own = added.filter((a) => a.sectionId === section.id).map((a) => a.field);
       const fields = [...section.fields, ...own].map((field) => {
         const fo = ov.fields[field.id];
-        return fo ? { ...field, ...definedOnly(fo) } : field;
+        if (!fo) return field;
+        const { visibleWhen, ...rest } = fo;
+        const merged = { ...field, ...definedOnly(rest) };
+        if (visibleWhen !== undefined) {
+          if (visibleWhen === null) delete merged.visibleWhen;
+          else merged.visibleWhen = visibleWhen;
+        }
+        return merged;
       });
       return so ? { ...section, ...definedOnly(so), fields } : { ...section, fields };
     }),
@@ -115,6 +129,11 @@ function normalizeFieldOverride(candidate: FieldOverride, base: FieldConfig): Fi
   }
   if (candidate.required !== undefined && requiredKey(candidate.required) !== requiredKey(base.required)) {
     out.required = candidate.required;
+  }
+  if (candidate.visibleWhen !== undefined) {
+    const baseRule = JSON.stringify(base.visibleWhen ?? null);
+    const cand = JSON.stringify(candidate.visibleWhen);
+    if (cand !== baseRule) out.visibleWhen = candidate.visibleWhen;
   }
   return Object.keys(out).length ? out : null;
 }
@@ -203,6 +222,8 @@ interface ConfigContextValue {
   isFieldAdded: (fieldId: string) => boolean;
   /** Replace or clear the visibility condition of an admin-created question. */
   setAddedFieldCondition: (fieldId: string, conds: Condition[] | null) => void;
+  /** Replace or clear the visibility rule of any question, base or added. */
+  setFieldCondition: (fieldId: string, conds: Condition[] | null) => void;
 }
 
 const ConfigContext = createContext<ConfigContextValue | null>(null);
@@ -381,6 +402,10 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
     removeAddedField,
     isFieldAdded: (id) => (overrides.added ?? []).some((a) => a.field.id === id),
     setAddedFieldCondition,
+    setFieldCondition: (id, conds) => {
+      if ((overrides.added ?? []).some((a) => a.field.id === id)) setAddedFieldCondition(id, conds);
+      else setFieldOverride(id, { visibleWhen: conds });
+    },
   };
 
   return <ConfigContext.Provider value={value}>{children}</ConfigContext.Provider>;

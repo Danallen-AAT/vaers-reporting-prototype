@@ -40,7 +40,7 @@ export function FieldEditor({
     isFieldAdded,
     updateAddedField,
     removeAddedField,
-    setAddedFieldCondition,
+    setFieldCondition,
   } = useConfig();
   const modified = isFieldModified(field.id);
   const added = isFieldAdded(field.id);
@@ -50,6 +50,14 @@ export function FieldEditor({
   const controllerField = cond
     ? allFields(config).find((x) => x.field.id === cond.field)?.field
     : undefined;
+  // The reporter-type selector is the instrument's root and never conditional.
+  // Compound rules (multiple conditions, or a suppression rule) stay governed
+  // configuration changes; the editor covers the single-condition rules that
+  // make up the base schema's branching (Amendment 1 Q&A 165).
+  const conditionEditable =
+    field.id !== 'reporterType' &&
+    !field.suppressWhen?.length &&
+    (field.visibleWhen?.length ?? 0) <= 1;
   const showPublic = field.path !== 'provider';
 
   // Does this field appear at all in the path currently being previewed?
@@ -178,7 +186,7 @@ export function FieldEditor({
           </select>
         </label>
 
-        {added && (
+        {conditionEditable && (
           <label className="fe-row">
             <span className="fe-cap">Shown</span>
             <select
@@ -187,11 +195,11 @@ export function FieldEditor({
               value={field.visibleWhen?.length ? 'when' : 'always'}
               onChange={(e) => {
                 if (e.target.value === 'always') {
-                  setAddedFieldCondition(field.id, null);
+                  setFieldCondition(field.id, null);
                 } else {
                   const first = eligibleControllers(config, field.id)[0];
                   if (first?.field.options?.length) {
-                    setAddedFieldCondition(field.id, [
+                    setFieldCondition(field.id, [
                       conditionFor(first.field, first.field.options[0].value),
                     ]);
                   }
@@ -204,7 +212,7 @@ export function FieldEditor({
           </label>
         )}
 
-        {added && cond && (
+        {conditionEditable && cond && (
           <>
             <label className="fe-row">
               <span className="fe-cap">Controlling question</span>
@@ -217,7 +225,7 @@ export function FieldEditor({
                     (c) => c.field.id === e.target.value,
                   )?.field;
                   if (ctl?.options?.length) {
-                    setAddedFieldCondition(field.id, [conditionFor(ctl, ctl.options[0].value)]);
+                    setFieldCondition(field.id, [conditionFor(ctl, ctl.options[0].value)]);
                   }
                 }}
               >
@@ -236,7 +244,7 @@ export function FieldEditor({
                 value={cond.equals ?? cond.includes ?? ''}
                 onChange={(e) => {
                   if (controllerField) {
-                    setAddedFieldCondition(field.id, [conditionFor(controllerField, e.target.value)]);
+                    setFieldCondition(field.id, [conditionFor(controllerField, e.target.value)]);
                   }
                 }}
               >

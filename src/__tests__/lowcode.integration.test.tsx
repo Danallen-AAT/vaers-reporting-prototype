@@ -118,6 +118,49 @@ describe('adding a question through the admin surface', () => {
     expect(within(stock).getByRole('button', { name: /revert this field/i })).toBeInTheDocument();
   });
 
+  it('edits a base question visibility rule point-and-click, and revert restores it', async () => {
+    const user = userEvent.setup();
+    const preview = renderAdmin();
+
+    // reporterName ships unconditional; make it provider-only.
+    const stock = screen
+      .getByLabelText('Label for reporterName')
+      .closest('.field-editor') as HTMLElement;
+    await user.selectOptions(
+      within(stock).getByRole('combobox', { name: /visibility rule for reporterName/i }),
+      'when',
+    );
+    await user.selectOptions(
+      within(stock).getByRole('combobox', { name: /controlling question for reporterName/i }),
+      'reporterType',
+    );
+    await user.selectOptions(
+      within(stock).getByRole('combobox', { name: /controlling answer for reporterName/i }),
+      'provider',
+    );
+    expect(within(stock).getByText('Modified')).toBeInTheDocument();
+
+    // Provider preview shows it; public preview hides it.
+    expect(preview.getByLabelText(/reporter name/i)).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Public' }));
+    expect(preview.queryByLabelText(/reporter name/i)).toBeNull();
+
+    // Revert restores the base schema's unconditional rule. Back on the
+    // provider preview, where the clinical label applies.
+    await user.click(screen.getByRole('button', { name: 'Provider' }));
+    await user.click(within(stock).getByRole('button', { name: /revert this field/i }));
+    expect(preview.getByLabelText(/reporter name/i)).toBeInTheDocument();
+    expect(within(stock).queryByText('Modified')).toBeNull();
+  }, 40000);
+
+  it('offers no visibility editor on the reporter-type selector', () => {
+    renderAdmin();
+    const root = screen
+      .getByLabelText('Label for reporterType')
+      .closest('.field-editor') as HTMLElement;
+    expect(within(root).queryByRole('combobox', { name: /visibility rule/i })).toBeNull();
+  });
+
   it('explains base-schema branching rules in plain language', () => {
     renderAdmin();
     // The 1.6.2 error-type question is conditional on the error answer.

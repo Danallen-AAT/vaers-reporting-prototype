@@ -155,7 +155,7 @@ publicLabel: 'Lot number on the vaccine record'  // public`}
 
       <Section id="verified" title="What has been verified">
         <ul>
-          <li><strong>126 automated tests across 18 files</strong>, run on every change. They cover
+          <li><strong>131 automated tests across 19 files</strong>, run on every change. They cover
             the branching matrix for both paths, the suppression rule, repeatable vaccine groups,
             validation, configuration overrides, completion progress, the mapping boundary, and
             accessibility.</li>
@@ -163,7 +163,7 @@ publicLabel: 'Lot number on the vaccine record'  // public`}
             passed, exercising actual key events rather than inspecting markup.</li>
           <li><strong>Performance, measured on the deployed build with a cold cache.</strong> 0.42
             seconds on broadband and 0.94 seconds on Fast 3G with a 4x CPU slowdown, across 4
-            requests and 88 kilobytes. The requirement is 3 seconds. The measurement script is in
+            requests and 90 kilobytes. The requirement is 3 seconds. The measurement script is in
             the repository at <code>verification/perf.mjs</code>, so the figure can be re-run
             rather than taken on trust.</li>
           <li><strong>Accessibility.</strong> Zero automated violations across fifteen interface
@@ -214,8 +214,9 @@ publicLabel: 'Lot number on the vaccine record'  // public`}
           <li>Open <a href="#/admin">the admin surface</a> and sign in. It accepts anything.</li>
           <li>Change a question label and watch the preview update as you type.</li>
           <li>Add a question of your own with "+ Add a question", give it choices, and set the
-            answer that makes it appear. It joins the live form at once, and the structured
-            output reports it openly as unmapped until an analyst maps it.</li>
+            answer that makes it appear, or change when an existing question appears. Every
+            change joins the live form at once, reverts per field, and new questions ride the
+            structured output openly marked unmapped until an analyst maps them.</li>
           <li>Open <a href="#/report">the reporting form</a> and see the same change on the live
             form. No rebuild, no redeployment, no developer.</li>
           <li>Choose the provider path, then answer that the report is a vaccine administration
