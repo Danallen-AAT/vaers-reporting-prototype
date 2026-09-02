@@ -155,7 +155,7 @@ publicLabel: 'Lot number on the vaccine record'  // public`}
 
       <Section id="verified" title="What has been verified">
         <ul>
-          <li><strong>146 automated tests across 22 files</strong>, run on every change. They cover
+          <li><strong>147 automated tests across 22 files</strong>, run on every change. They cover
             the branching matrix for both paths, the suppression rule, repeatable vaccine groups,
             validation, configuration overrides, completion progress, the mapping boundary, and
             accessibility.</li>

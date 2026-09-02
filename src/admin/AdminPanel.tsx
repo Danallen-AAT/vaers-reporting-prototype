@@ -124,7 +124,7 @@ export function AdminPanel({ onSignOut, user }: { onSignOut?: () => void; user?:
             <label className="publish-label">
               <span className="fe-cap">Describe this change</span>
               <input
-                className="fe-input"
+                className="publish-input"
                 aria-label="Describe this change"
                 value={changeLabel}
                 placeholder="For example: plainer wording on the vaccine questions"

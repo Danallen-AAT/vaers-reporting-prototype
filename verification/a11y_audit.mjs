@@ -196,7 +196,8 @@ await ev(`(() => {
 await sleep(1200);
 const PAYLOAD = '<img src=x onerror=window.__XSS=1><b>BOLD</b>';
 const injected = await ev(`(() => {
-  const inp = document.querySelector('.fe-input');
+  // A question label editor specifically, not whichever input renders first.
+  const inp = document.querySelector('input[aria-label^="Label for"]');
   if (!inp) return 'no editor input found';
   const set = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set;
   set.call(inp, ${JSON.stringify(PAYLOAD)});

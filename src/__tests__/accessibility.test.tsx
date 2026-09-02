@@ -200,4 +200,23 @@ describe('accessibility: admin configuration surface', () => {
     ).toBeInTheDocument();
     expect(await axe(container, AXE_OPTS)).toHaveNoViolations();
   }, 30000);
+
+  it('has no violations with the publish history expanded', async () => {
+    const user = userEvent.setup();
+    const { container } = render(
+      <ConfigProvider>
+        <AdminPanel user="dana.reviewer" />
+      </ConfigProvider>,
+    );
+    // Publish once so the history has an entry to render.
+    await user.type(screen.getByLabelText('Label for reporterName'), ' X');
+    await user.type(
+      screen.getByRole('textbox', { name: /describe this change/i }),
+      'Wording tweak',
+    );
+    await user.click(screen.getByRole('button', { name: /publish to the live form/i }));
+    await user.click(screen.getByRole('button', { name: /show publish history/i }));
+
+    expect(await axe(container, AXE_OPTS)).toHaveNoViolations();
+  }, 40000);
 });

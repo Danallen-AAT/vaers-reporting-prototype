@@ -646,7 +646,8 @@ select.input {
   font-weight: 600;
   color: var(--ink-muted);
 }
-.fe-input {
+.fe-input,
+.publish-input {
   font: inherit;
   width: 100%;
   border: 1px solid var(--border-strong);
