@@ -28,7 +28,8 @@ export type IssueCode =
   | 'unknown-option'
   | 'cycle'
   | 'unreachable-field'
-  | 'unreachable-section';
+  | 'unreachable-section'
+  | 'lost-path';
 
 export interface ConfigIssue {
   code: IssueCode;
@@ -199,7 +200,34 @@ function settleForward(config: FormConfig, values: FormValues): FormValues {
   return current;
 }
 
-export function checkConfiguration(config: FormConfig): ConfigCheckResult {
+/**
+ * Which reporter paths can still see each question. Reachability on its own is
+ * too weak a property: a question moved into a provider-only section is still
+ * reachable, and has silently stopped being collected from members of the
+ * public. What matters is whether a question still reaches the people it used
+ * to reach.
+ */
+function pathsReachingEachField(config: FormConfig, combos: FormValues[]): Map<string, Set<string>> {
+  const byField = new Map<string, Set<string>>();
+  for (const values of combos) {
+    const path = values.reporterType;
+    if (typeof path !== 'string') continue;
+    for (const id of visibleFieldIds(config, values)) {
+      const base = id.replace(/__\d+$/, '');
+      for (const key of [id, base]) {
+        const seen = byField.get(key) ?? new Set<string>();
+        seen.add(path);
+        byField.set(key, seen);
+      }
+    }
+  }
+  return byField;
+}
+
+export function checkConfiguration(
+  config: FormConfig,
+  baseline?: FormConfig,
+): ConfigCheckResult {
   const fields = allFields(config);
   const byId = new Map(fields.map((f) => [f.id, f]));
   const issues: ConfigIssue[] = [];
@@ -320,6 +348,7 @@ export function checkConfiguration(config: FormConfig): ConfigCheckResult {
 
   const fieldsSeen = new Set<string>();
   const sectionsSeen = new Set<string>();
+  const settled: FormValues[] = [];
   for (const raw of combos) {
     // A cartesian product over answer values includes states the running form
     // will not hold. Choosing the provider path drops answers to public-only
@@ -331,6 +360,7 @@ export function checkConfiguration(config: FormConfig): ConfigCheckResult {
     const onPath =
       raw.reporterType === undefined ? raw : carryAnswersAcross(config, raw, raw.reporterType);
     const values = settleForward(config, onPath);
+    settled.push(values);
     for (const id of visibleFieldIds(config, values)) {
       fieldsSeen.add(id);
       // Repeated instances store under `${fieldId}__${instance}`.
@@ -354,6 +384,45 @@ export function checkConfiguration(config: FormConfig): ConfigCheckResult {
           code: 'unreachable-field',
           target: field.id,
           message: `"${field.label}" can never appear, whatever the reporter answers.`,
+        });
+      }
+    }
+  }
+
+  // A question can be reachable and still have stopped reaching people. Moving
+  // one into a provider-only section leaves it reachable, and quietly removes
+  // it from every member of the public who used to answer it. Comparing which
+  // paths reach each question against the configuration as it shipped is what
+  // catches that.
+  if (baseline) {
+    const now = pathsReachingEachField(config, settled);
+    const before = pathsReachingEachField(baseline, settled);
+    const labelOf = new Map(
+      config.sections.flatMap((s) => s.fields).map((f) => [f.id, f.label || f.id]),
+    );
+    const requiredIds = new Set(
+      config.sections
+        .flatMap((s) => s.fields)
+        .filter((f) => f.required === true)
+        .map((f) => f.id),
+    );
+    const readable: Record<string, string> = {
+      public: 'members of the public',
+      provider: 'healthcare providers',
+    };
+    for (const [id, paths] of before) {
+      if (!labelOf.has(id)) continue;
+      // Narrowing an optional question to one path is a content decision the
+      // surface exists to allow. A required one is different: the people who
+      // lose it stop being asked for something the form says it must have, and
+      // nothing else in the product would tell anyone.
+      if (!requiredIds.has(id)) continue;
+      const lost = [...paths].filter((p) => !(now.get(id) ?? new Set()).has(p));
+      for (const path of lost) {
+        issues.push({
+          code: 'lost-path',
+          target: id,
+          message: `"${labelOf.get(id)}" is required, and no longer appears for ${readable[path] ?? path}, who saw it before. It would stop being collected from them entirely.`,
         });
       }
     }

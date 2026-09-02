@@ -410,7 +410,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
   const config = useMemo(() => applyOverrides(vaersForm, published.overrides), [published]);
   /** What the configuration screen edits and previews. */
   const draftConfig = useMemo(() => applyOverrides(vaersForm, overrides), [overrides]);
-  const configCheck = useMemo(() => checkConfiguration(draftConfig), [draftConfig]);
+  const configCheck = useMemo(() => checkConfiguration(draftConfig, vaersForm), [draftConfig]);
   const hasDraftChanges = useMemo(
     () =>
       JSON.stringify({ o: overrides, f: faqs }) !==
@@ -580,7 +580,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
     hasDraftChanges,
     history,
     publish: (label, by) => {
-      const check = checkConfiguration(draftConfig);
+      const check = checkConfiguration(draftConfig, vaersForm);
       if (!check.ok) {
         return {
           ok: false,
@@ -631,7 +631,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
         ...overrides,
         moved: { ...(overrides.moved ?? {}), [id]: sectionId },
       });
-      const introduced = checkConfiguration(candidate).issues.filter(
+      const introduced = checkConfiguration(candidate, vaersForm).issues.filter(
         (next) =>
           !configCheck.issues.some((now) => now.code === next.code && now.target === next.target),
       );
@@ -647,7 +647,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
       // change would introduce block it; anything already outstanding is not
       // held against the author.
       const candidate = applyOverrides(vaersForm, withFieldCondition(overrides, id, conds));
-      const introduced = checkConfiguration(candidate).issues.filter(
+      const introduced = checkConfiguration(candidate, vaersForm).issues.filter(
         (next) =>
           !configCheck.issues.some((now) => now.code === next.code && now.target === next.target),
       );

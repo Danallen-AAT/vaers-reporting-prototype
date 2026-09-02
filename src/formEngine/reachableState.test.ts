@@ -73,7 +73,38 @@ describe('reachability is judged over states the form can hold', () => {
     ).toBe(true);
   });
 
+  it('reports a required question moved out of a path it used to serve', () => {
+    // Three interactions in the shipped editor: pick the Section dropdown for a
+    // required question and move it into a provider-only section. It stays
+    // reachable, so reachability alone says nothing is wrong, while every
+    // member of the public quietly stops being asked for it.
+    const config = clone(vaersForm);
+    const providerOnly = config.sections.find((s) => s.path === 'provider')!;
+    for (const section of config.sections) {
+      const i = section.fields.findIndex((f) => f.id === 'reporterName');
+      if (i === -1) continue;
+      providerOnly.fields.push(section.fields.splice(i, 1)[0]);
+      break;
+    }
+    const result = checkConfiguration(config, vaersForm);
+    const issue = result.issues.find((i) => i.code === 'lost-path' && i.target === 'reporterName');
+    expect(issue?.message).toMatch(/members of the public/i);
+    expect(issue?.message).toMatch(/required/i);
+    expect(result.ok).toBe(false);
+  });
+
+  it('allows narrowing an optional question to one path', () => {
+    // The surface exists to allow content decisions like this one, so the
+    // guard has to distinguish them from a required question going missing.
+    const config = clone(vaersForm);
+    for (const section of config.sections) {
+      const field = section.fields.find((f) => f.id === 'reporterEmail');
+      if (field) field.path = 'provider';
+    }
+    expect(checkConfiguration(config, vaersForm).ok).toBe(true);
+  });
+
   it('does not cry wolf: the shipped configuration still passes', () => {
-    expect(checkConfiguration(vaersForm).ok).toBe(true);
+    expect(checkConfiguration(vaersForm, vaersForm).ok).toBe(true);
   });
 });

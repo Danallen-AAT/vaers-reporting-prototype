@@ -37,19 +37,19 @@ describe('configuration integrity gate', () => {
     const user = userEvent.setup();
     renderAdmin();
     const stock = screen
-      .getByLabelText('Label for reporterName')
+      .getByLabelText('Label for reporterEmail')
       .closest('.field-editor') as HTMLElement;
 
     await user.selectOptions(
-      within(stock).getByRole('combobox', { name: /visibility rule for reporterName/i }),
+      within(stock).getByRole('combobox', { name: /visibility rule for reporterEmail/i }),
       'when',
     );
     await user.selectOptions(
-      within(stock).getByRole('combobox', { name: /controlling question for reporterName/i }),
+      within(stock).getByRole('combobox', { name: /controlling question for reporterEmail/i }),
       'reporterType',
     );
     await user.selectOptions(
-      within(stock).getByRole('combobox', { name: /controlling answer for reporterName/i }),
+      within(stock).getByRole('combobox', { name: /controlling answer for reporterEmail/i }),
       'provider',
     );
 
