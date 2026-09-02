@@ -4,6 +4,7 @@
 // ---------------------------------------------------------------------------
 import { repeatFieldId, type FieldConfig, type FormConfig, type FormValues } from '../config/types';
 import { getVisibleForm } from './visibility';
+import { isBlankText } from './configCheck';
 
 export type Errors = Record<string, string>;
 
@@ -15,8 +16,11 @@ export function isRequired(field: FieldConfig): boolean {
 }
 
 function isBlank(v: unknown): boolean {
-  if (v === undefined || v === null || v === '') return true;
+  if (v === undefined || v === null) return true;
   if (Array.isArray(v)) return v.length === 0;
+  // A space bar is not an answer, and neither are invisible characters, so a
+  // required question is not satisfied by either.
+  if (typeof v === 'string') return isBlankText(v);
   return false;
 }
 

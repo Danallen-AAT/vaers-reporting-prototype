@@ -4,7 +4,8 @@
 // Left: a content editor for every section/field plus the FAQ. Right: a LIVE
 // preview rendered by the very same FormRenderer/engine the public app uses,
 // reading the same effective config. Editing a label on the left updates the
-// preview on the right instantly - the "no redeploy" low-code story, on camera.
+// preview on the right at once, while reporters stay on the published
+// version until a publish: the "no redeploy" low-code story, on camera.
 // ---------------------------------------------------------------------------
 import { useState } from 'react';
 import { ConfirmAction } from '../components/ConfirmAction';
@@ -47,10 +48,11 @@ export function AdminPanel({ onSignOut, user }: { onSignOut?: () => void; user?:
           )}
         </div>
         <p className="admin-lede">
-          Edit question labels, help text, requiredness, and FAQs. Add questions
-          and set the answer that makes them appear. Changes save to this browser
-          and the live form updates instantly, with no code change and no
-          redeploy. This is how a CDC program owner maintains the form.
+          Edit question labels, help text, requiredness, and FAQs. Add questions,
+          set the answer that makes them appear, and move questions between
+          sections. Edits are held as a draft and reach reporters when you
+          publish, with no code change and no redeploy. This is how a CDC
+          program owner maintains the form.
         </p>
         <div className="admin-actions">
           <a className="btn btn-primary" href="#/">

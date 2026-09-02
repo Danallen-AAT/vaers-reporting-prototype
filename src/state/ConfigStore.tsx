@@ -384,11 +384,23 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
         DRAFT_KEY,
         JSON.stringify({ version: vaersForm.version, overrides, faqs }),
       );
-      localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
     } catch {
       /* localStorage unavailable or full, non-fatal for the demo. */
     }
-  }, [overrides, faqs, history]);
+  }, [overrides, faqs]);
+
+  // The published configuration and its history are shared by every tab, so a
+  // tab that has been sitting idle must not serialise its stale copy over
+  // another tab's work. Publishing writes them (merging with what is stored),
+  // and a storage event pulls another tab's publish into this one.
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === HISTORY_KEY) setHistory(loadHistory());
+      else if (e.key === STORAGE_KEY) setPublished(loadState());
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
 
   /** What the reporting form renders: the published configuration. */
   const config = useMemo(() => applyOverrides(vaersForm, published.overrides), [published]);
@@ -579,8 +591,14 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
         overrides,
         faqs,
       };
+      const merged = [entry, ...loadHistory()].slice(0, 50);
+      try {
+        localStorage.setItem(HISTORY_KEY, JSON.stringify(merged));
+      } catch {
+        /* localStorage unavailable or full, non-fatal for the demo. */
+      }
       setPublished({ overrides, faqs });
-      setHistory((prev) => [entry, ...prev].slice(0, 50));
+      setHistory(merged);
       return { ok: true };
     },
     discardDraft: () => {

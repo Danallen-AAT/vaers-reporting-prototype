@@ -58,6 +58,15 @@ describe('configuration integrity check', () => {
     expect(checkConfiguration(config).issues.some((i) => i.code === 'empty-label')).toBe(true);
   });
 
+  it('catches a label made only of zero-width characters', () => {
+    // A label pasted full of invisibles looks set in the editor and is silence
+    // to a screen reader, so it has to fail the same way an empty one does.
+    const config = withField((c) => {
+      c.sections[0].fields[1].label = '​​﻿';
+    });
+    expect(checkConfiguration(config).issues.some((i) => i.code === 'empty-label')).toBe(true);
+  });
+
   it('allows a cleared public label, which falls back to the clinical one', () => {
     const config = withField((c) => {
       c.sections[0].fields[1].publicLabel = '';

@@ -46,6 +46,35 @@ export interface ConfigCheckResult {
   truncated: boolean;
 }
 
+/**
+ * Characters that occupy no visual space and are announced by nothing: the
+ * zero-width family, the byte order mark, and word joiner. A label made only of
+ * these looks set in the editor and is silence to a screen reader, so they are
+ * removed before asking whether anything is left.
+ */
+const INVISIBLE_CODEPOINTS = new Set([
+  0x200b, 0x200c, 0x200d, 0x200e, 0x200f, // zero-width space through RTL mark
+  0x2028, 0x2029, // line and paragraph separators
+  0x202a, 0x202b, 0x202c, 0x202d, 0x202e, // bidirectional embedding controls
+  0x2060, 0x2061, 0x2062, 0x2063, 0x2064, // word joiner and invisible operators
+  0xfeff, // byte order mark, the classic invisible paste
+]);
+
+/**
+ * True when the text carries nothing a person could see or hear. Whitespace is
+ * the obvious case; the harder one is a label pasted full of zero-width
+ * characters, which looks set in the editor and is silence to a screen reader.
+ */
+export function isBlankText(value: string | undefined): boolean {
+  if (!value) return true;
+  for (const ch of value) {
+    if (ch.trim() === '') continue;
+    if (INVISIBLE_CODEPOINTS.has(ch.codePointAt(0) ?? 0)) continue;
+    return false;
+  }
+  return true;
+}
+
 function allFields(config: FormConfig): FieldConfig[] {
   return config.sections.flatMap((s) => s.fields);
 }
@@ -144,7 +173,7 @@ export function checkConfiguration(config: FormConfig): ConfigCheckResult {
   //    output). The public label falls back to the clinical one, so a blank
   //    clinical label is what breaks both paths.
   for (const section of config.sections) {
-    if (!section.title?.trim()) {
+    if (isBlankText(section.title)) {
       issues.push({
         code: 'empty-section-title',
         target: section.id,
@@ -152,7 +181,7 @@ export function checkConfiguration(config: FormConfig): ConfigCheckResult {
       });
     }
     for (const field of section.fields) {
-      if (!field.label?.trim()) {
+      if (isBlankText(field.label)) {
         issues.push({
           code: 'empty-label',
           target: field.id,
