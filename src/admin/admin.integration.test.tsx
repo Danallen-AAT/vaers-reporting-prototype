@@ -94,7 +94,7 @@ describe('admin config surface', () => {
     // Reset is a guarded, two-step action: the trigger opens a confirmation
     // and only the explicit confirm resets.
     await user.click(screen.getByRole('button', { name: /reset all to defaults/i }));
-    const confirm = screen.getByRole('group', { name: /removes every customization/i });
+    const confirm = screen.getByRole('group', { name: /returns the draft to the default configuration/i });
     await user.click(within(confirm).getByRole('button', { name: 'Reset everything' }));
 
     const preview = screen.getByRole('complementary', { name: /live form preview/i });

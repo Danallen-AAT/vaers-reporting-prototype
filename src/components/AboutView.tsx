@@ -214,11 +214,16 @@ publicLabel: 'Lot number on the vaccine record'  // public`}
           <li>Open <a href="#/admin">the admin surface</a> and sign in. It accepts anything.</li>
           <li>Change a question label and watch the preview update as you type.</li>
           <li>Add a question of your own with "+ Add a question", give it choices, and set the
-            answer that makes it appear, or change when an existing question appears. Every
-            change joins the live form at once, reverts per field, and new questions ride the
-            structured output openly marked unmapped until an analyst maps them.</li>
-          <li>Open <a href="#/report">the reporting form</a> and see the same change on the live
-            form. No rebuild, no redeployment, no developer.</li>
+            answer that makes it appear, change when an existing question appears, or move a
+            question to another section. Each change reverts per field, and new questions ride
+            the structured output openly marked unmapped until an analyst maps them.</li>
+          <li>Notice that none of it has reached reporters yet. Edits are held as a draft, so
+            the badge reads "Unpublished changes" and the reporting form is unchanged.</li>
+          <li>Describe the change and press "Publish to the live form". The publish is refused
+            if the draft would strand a question, and recorded with your name and description
+            in the publish history, where any earlier version can be loaded back.</li>
+          <li>Open <a href="#/report">the reporting form</a> and see the published change. No
+            rebuild, no redeployment, no developer.</li>
           <li>Choose the provider path, then answer that the report is a vaccine administration
             error with no adverse event, and watch the entire adverse event section disappear.</li>
         </ol>

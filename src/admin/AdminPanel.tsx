@@ -58,7 +58,7 @@ export function AdminPanel({ onSignOut, user }: { onSignOut?: () => void; user?:
           </a>
           <ConfirmAction
             triggerLabel="Reset all to defaults"
-            prompt="This removes every customization and returns the form to its default configuration."
+            prompt="This returns the draft to the default configuration. Reporters are unaffected until you publish."
             confirmLabel="Reset everything"
             cancelLabel="Keep my changes"
             onConfirm={resetAll}

@@ -111,7 +111,7 @@ describe('admin reset all to defaults', () => {
     await customize(user);
 
     await user.click(screen.getByRole('button', { name: 'Reset all to defaults' }));
-    const confirm = screen.getByRole('group', { name: /removes every customization/i });
+    const confirm = screen.getByRole('group', { name: /returns the draft to the default configuration/i });
     await user.click(within(confirm).getByRole('button', { name: 'Keep my changes' }));
 
     expect(screen.getByText('Customized')).toBeInTheDocument();
@@ -122,7 +122,7 @@ describe('admin reset all to defaults', () => {
     await customize(user);
 
     await user.click(screen.getByRole('button', { name: 'Reset all to defaults' }));
-    const confirm = screen.getByRole('group', { name: /removes every customization/i });
+    const confirm = screen.getByRole('group', { name: /returns the draft to the default configuration/i });
     await user.click(within(confirm).getByRole('button', { name: 'Reset everything' }));
 
     expect(screen.getByText('Default configuration')).toBeInTheDocument();

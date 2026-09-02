@@ -196,7 +196,7 @@ describe('accessibility: admin configuration surface', () => {
     await user.type(screen.getByLabelText('Label for reporterName'), ' X');
     await user.click(screen.getByRole('button', { name: 'Reset all to defaults' }));
     expect(
-      screen.getByRole('group', { name: /removes every customization/i }),
+      screen.getByRole('group', { name: /returns the draft to the default configuration/i }),
     ).toBeInTheDocument();
     expect(await axe(container, AXE_OPTS)).toHaveNoViolations();
   }, 30000);
