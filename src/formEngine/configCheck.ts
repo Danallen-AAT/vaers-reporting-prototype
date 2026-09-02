@@ -162,6 +162,42 @@ function candidateValues(
   return [undefined, ...scalars];
 }
 
+/**
+ * The answers a reporter could still be holding in this state, having filled
+ * the form forward.
+ *
+ * A question that is not on screen keeps whatever was typed into it, and that
+ * retained answer goes on driving branching. So a combination can describe a
+ * state a reporter reaches only by answering something, watching the question
+ * disappear, and then reversing the answer that hid it. Reachability judged
+ * over those states is too generous: it will certify a question as reachable
+ * when no one filling the form in order will ever see it.
+ *
+ * Dropping answers to questions that are not visible, repeatedly until the set
+ * stops changing, leaves the answers a forward pass can actually produce.
+ */
+function settleForward(config: FormConfig, values: FormValues): FormValues {
+  let current = values;
+  // Each pass can hide more questions, so iterate to a fixed point. The bound
+  // is the number of questions, since each pass removes at least one or stops.
+  for (let pass = 0; pass < config.sections.length + 1; pass += 1) {
+    const visible = visibleFieldIds(config, current);
+    const next: FormValues = {};
+    for (const [key, value] of Object.entries(current)) {
+      // The reporter path is chosen before anything else and always stands.
+      if (key === 'reporterType') {
+        next[key] = value;
+        continue;
+      }
+      const base = key.replace(/__\d+$/, '');
+      if (visible.has(key) || visible.has(base)) next[key] = value;
+    }
+    if (Object.keys(next).length === Object.keys(current).length) return next;
+    current = next;
+  }
+  return current;
+}
+
 export function checkConfiguration(config: FormConfig): ConfigCheckResult {
   const fields = allFields(config);
   const byId = new Map(fields.map((f) => [f.id, f]));
@@ -280,8 +316,9 @@ export function checkConfiguration(config: FormConfig): ConfigCheckResult {
     // states the form can actually be in. Projecting each combination through
     // the same function the application uses on a path switch is what makes
     // the check's notion of reachable and the form's the same notion.
-    const values =
+    const onPath =
       raw.reporterType === undefined ? raw : carryAnswersAcross(config, raw, raw.reporterType);
+    const values = settleForward(config, onPath);
     for (const id of visibleFieldIds(config, values)) {
       fieldsSeen.add(id);
       // Repeated instances store under `${fieldId}__${instance}`.

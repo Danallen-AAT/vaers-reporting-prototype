@@ -55,6 +55,24 @@ describe('reachability is judged over states the form can hold', () => {
     expect(shows({ reporterType: 'provider' })).toBe(false);
   });
 
+  it('reports a question reachable only by answering and then reversing', () => {
+    // The evaluator's attack, in two dropdowns: gate a required question on
+    // "no adverse event". A provider filling forward never sees it, because
+    // answering no removes the section it lives in. It appears only to someone
+    // who answers the error question yes, answers no here, then goes back and
+    // reverses the first answer, leaving a hidden answer still driving the
+    // branch. That is not a state the form can be filled into.
+    const config = clone(vaersForm);
+    for (const section of config.sections) {
+      const field = section.fields.find((f) => f.id === 'aeDescription');
+      if (field) field.visibleWhen = [{ field: 'errorHadAE', equals: 'no' }];
+    }
+    const result = checkConfiguration(config);
+    expect(
+      result.issues.some((i) => i.code === 'unreachable-field' && i.target === 'aeDescription'),
+    ).toBe(true);
+  });
+
   it('does not cry wolf: the shipped configuration still passes', () => {
     expect(checkConfiguration(vaersForm).ok).toBe(true);
   });
