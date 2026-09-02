@@ -91,6 +91,27 @@ describe('draft and publish', () => {
     expect(screen.getByLabelText(/who is reporting/i)).toBeInTheDocument();
   }, 40000);
 
+  it('refuses to publish a question whose label has been cleared', async () => {
+    const user = userEvent.setup();
+    renderAdmin();
+
+    // The exact attack: empty a label through the configuration screen and try
+    // to push it to reporters. It must not reach them unnamed.
+    await user.clear(labelBox());
+    expect(screen.getByRole('status', { name: /configuration check/i })).toHaveTextContent(
+      /unnamed/i,
+    );
+
+    await user.type(
+      screen.getByRole('textbox', { name: /describe this change/i }),
+      'Clear a label',
+    );
+    await user.click(publishButton());
+
+    expect(screen.getByRole('alert')).toHaveTextContent(/not published/i);
+    expect(screen.getByText(/unpublished changes/i)).toBeInTheDocument();
+  }, 40000);
+
   it('discarding the draft restores the published wording', async () => {
     const user = userEvent.setup();
     renderAdmin();

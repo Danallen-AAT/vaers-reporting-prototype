@@ -39,6 +39,41 @@ describe('configuration integrity check', () => {
     expect(result.combinations).toBe(324);
   });
 
+  it('catches a question whose label has been cleared', () => {
+    // Clearing a label leaves the label element with nothing in it, which is an
+    // unnamed control on the live form. The authoring tool must not allow it.
+    const config = withField((c) => {
+      c.sections[0].fields[1].label = '';
+    });
+    const result = checkConfiguration(config);
+    expect(result.ok).toBe(false);
+    const issue = result.issues.find((i) => i.code === 'empty-label');
+    expect(issue?.message).toMatch(/unnamed/i);
+  });
+
+  it('catches a label emptied to whitespace, not just to nothing', () => {
+    const config = withField((c) => {
+      c.sections[0].fields[1].label = '   ';
+    });
+    expect(checkConfiguration(config).issues.some((i) => i.code === 'empty-label')).toBe(true);
+  });
+
+  it('allows a cleared public label, which falls back to the clinical one', () => {
+    const config = withField((c) => {
+      c.sections[0].fields[1].publicLabel = '';
+    });
+    expect(checkConfiguration(config).ok).toBe(true);
+  });
+
+  it('catches a section whose heading has been cleared', () => {
+    const config = withField((c) => {
+      c.sections[0].title = '';
+    });
+    expect(checkConfiguration(config).issues.some((i) => i.code === 'empty-section-title')).toBe(
+      true,
+    );
+  });
+
   it('catches a rule pointing at a question that does not exist', () => {
     const config = withField((c) => {
       c.sections[0].fields[1].visibleWhen = [{ field: 'noSuchQuestion', equals: 'yes' }];

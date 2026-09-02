@@ -20,6 +20,8 @@ const CHOICE_TYPES = new Set(['radio', 'select', 'multiselect', 'checkbox']);
 const MAX_COMBINATIONS = 4096;
 
 export type IssueCode =
+  | 'empty-label'
+  | 'empty-section-title'
   | 'unknown-controller'
   | 'unknown-option'
   | 'cycle'
@@ -135,7 +137,32 @@ export function checkConfiguration(config: FormConfig): ConfigCheckResult {
   const byId = new Map(fields.map((f) => [f.id, f]));
   const issues: ConfigIssue[] = [];
 
-  // 1. Every predicate must name a question that exists, and compare against a
+  // 1. Every question must still have a name to be announced by. An editor who
+  //    clears a label leaves the label element in place with nothing in it,
+  //    which is an unnamed control on the live form (WCAG 4.1.2, and the
+  //    Chapter 504 promise that an authoring tool cannot produce inaccessible
+  //    output). The public label falls back to the clinical one, so a blank
+  //    clinical label is what breaks both paths.
+  for (const section of config.sections) {
+    if (!section.title?.trim()) {
+      issues.push({
+        code: 'empty-section-title',
+        target: section.id,
+        message: 'A section has no heading. Every section needs a title reporters can see.',
+      });
+    }
+    for (const field of section.fields) {
+      if (!field.label?.trim()) {
+        issues.push({
+          code: 'empty-label',
+          target: field.id,
+          message: `A question has no label, so a screen reader would announce it as unnamed. Give "${field.id}" a label, or remove the question.`,
+        });
+      }
+    }
+  }
+
+  // 2. Every predicate must name a question that exists, and compare against a
   //    choice that question actually offers.
   const referencedByField = new Map<string, Set<string>>();
   for (const { owner, cond } of allConditions(config)) {
@@ -163,7 +190,7 @@ export function checkConfiguration(config: FormConfig): ConfigCheckResult {
     referencedByField.set(cond.field, seen);
   }
 
-  // 2. Rules must not chase each other in a circle.
+  // 3. Rules must not chase each other in a circle.
   const cycle = findCycle(config);
   if (cycle) {
     issues.push({
@@ -173,7 +200,7 @@ export function checkConfiguration(config: FormConfig): ConfigCheckResult {
     });
   }
 
-  // 3. Generate the decision matrix and see what can actually appear.
+  // 4. Generate the decision matrix and see what can actually appear.
   const candidates = [...referencedByField.keys()]
     .map((id) => byId.get(id))
     .filter((f): f is FieldConfig => !!f && CHOICE_TYPES.has(f.type) && (f.options?.length ?? 0) > 0);
