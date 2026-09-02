@@ -33,6 +33,6 @@ export const defaultFaqs: FaqItem[] = [
     id: 'faq-privacy',
     question: 'Is my information stored by this prototype?',
     answer:
-      'No. This is a demonstration only. Nothing you enter is saved, transmitted, or shared. Do not enter real personal or health information.',
+      'No. This is a demonstration only. Nothing you enter in a report is saved, transmitted, or shared. Do not enter real personal or health information.',
   },
 ];

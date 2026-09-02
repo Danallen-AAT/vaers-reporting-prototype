@@ -192,6 +192,7 @@ export function FieldEditor({
           </select>
         </label>
 
+        {field.id !== 'reporterType' && (
         <label className="fe-row">
           <span className="fe-cap">Section</span>
           <select
@@ -207,6 +208,7 @@ export function FieldEditor({
             ))}
           </select>
         </label>
+        )}
         {isFieldMoved(field.id) && (
           <p className="fe-note">Moved from the section it shipped in. Revert returns it.</p>
         )}

@@ -29,7 +29,11 @@ import type {
   SectionConfig,
 } from '../config/types';
 import { vaersForm } from '../config/vaersForm';
-import { checkConfiguration, type ConfigCheckResult } from '../formEngine/configCheck';
+import {
+  checkConfiguration,
+  isBlankText,
+  type ConfigCheckResult,
+} from '../formEngine/configCheck';
 import { defaultFaqs, type FaqItem } from '../config/faqs';
 
 export interface FieldOverride {
@@ -583,9 +587,18 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
           reason: `The draft does not pass its own check, so it cannot go live. ${check.issues[0].message}`,
         };
       }
+      // The audit trail's whole value is saying why, so a description of
+      // nothing at all, including invisible characters, is refused rather than
+      // recorded as "Untitled change".
+      if (isBlankText(label)) {
+        return {
+          ok: false,
+          reason: 'Describe this change before publishing, so the history records why it happened.',
+        };
+      }
       const entry: PublishedVersion = {
         id: `v${Date.now().toString(36)}`,
-        label: label.trim() || 'Untitled change',
+        label: label.trim(),
         at: new Date().toISOString(),
         by: by || 'Unknown',
         overrides,

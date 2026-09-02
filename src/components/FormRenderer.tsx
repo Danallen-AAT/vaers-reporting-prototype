@@ -304,8 +304,8 @@ export function FormRenderer() {
             mapping layer, keyed to the published VAERS 2.0 form items where a
             counterpart exists. Fields born of the modernized workflow await the
             data element definitions CDC furnishes at kickoff, and the meta
-            block below reports both counts openly (see How it works). Nothing
-            is stored or transmitted in this prototype.
+            block below reports both counts openly (see How it works). Nothing in
+            this report is stored or transmitted.
           </p>
           <div className="form-actions output-actions">
             <button type="button" className="btn btn-outline" onClick={downloadOutput}>

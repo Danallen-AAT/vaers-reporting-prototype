@@ -22,6 +22,7 @@ const MAX_COMBINATIONS = 4096;
 
 export type IssueCode =
   | 'empty-label'
+  | 'empty-option-label'
   | 'empty-section-title'
   | 'unknown-controller'
   | 'unknown-option'
@@ -224,6 +225,17 @@ export function checkConfiguration(config: FormConfig): ConfigCheckResult {
           target: field.id,
           message: `A question has no label, so a screen reader would announce it as unnamed. Give "${field.id}" a label, or remove the question.`,
         });
+      }
+      // A choice is a label too. An answer with nothing to read is an unnamed
+      // control on the live form exactly as an unnamed question is.
+      for (const option of field.options ?? []) {
+        if (isBlankText(option.label)) {
+          issues.push({
+            code: 'empty-option-label',
+            target: field.id,
+            message: `An answer to "${field.label || field.id}" has nothing to read, so a reporter would meet a choice a screen reader announces as unnamed. Give every answer a label.`,
+          });
+        }
       }
     }
   }

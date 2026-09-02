@@ -59,8 +59,9 @@ export default function App() {
         <div className="wrap">
           <p>
             Prototype for demonstration only (CDC RFQ 75D301-26-Q-00146). Do not
-            enter real personal or health information. No data is stored or
-            transmitted.
+            enter real personal or health information. Nothing you enter in a
+            report is stored or transmitted. Configuration changes and the demo
+            sign-in name are kept in this browser only.
           </p>
         </div>
       </footer>

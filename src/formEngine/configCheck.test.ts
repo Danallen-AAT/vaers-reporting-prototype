@@ -67,6 +67,32 @@ describe('configuration integrity check', () => {
     expect(checkConfiguration(config).issues.some((i) => i.code === 'empty-label')).toBe(true);
   });
 
+  it('catches a choice with nothing to read, not just a question', () => {
+    // A blank answer label is an unnamed control the same way a blank question
+    // label is, and the check used to look only at the question.
+    const config = withField((c) => {
+      const field = c.sections
+        .flatMap((s) => s.fields)
+        .find((f) => (f.options?.length ?? 0) > 0)!;
+      field.options![0].label = '';
+    });
+    const result = checkConfiguration(config);
+    expect(result.ok).toBe(false);
+    expect(result.issues.some((i) => i.code === 'empty-option-label')).toBe(true);
+  });
+
+  it('catches a choice labelled with invisible characters', () => {
+    const config = withField((c) => {
+      const field = c.sections
+        .flatMap((s) => s.fields)
+        .find((f) => (f.options?.length ?? 0) > 0)!;
+      field.options![0].label = '​⁠';
+    });
+    expect(
+      checkConfiguration(config).issues.some((i) => i.code === 'empty-option-label'),
+    ).toBe(true);
+  });
+
   it('allows a cleared public label, which falls back to the clinical one', () => {
     const config = withField((c) => {
       c.sections[0].fields[1].publicLabel = '';

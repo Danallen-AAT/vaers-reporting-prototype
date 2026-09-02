@@ -193,13 +193,25 @@ export function AdminPanel({ onSignOut, user }: { onSignOut?: () => void; user?:
                   <span className="ph-meta">
                     {new Date(v.at).toLocaleString()} by {v.by}
                   </span>
-                  <button
-                    type="button"
-                    className="btn btn-link"
-                    onClick={() => restoreVersion(v.id)}
-                  >
-                    Load into draft
-                  </button>
+                  {hasDraftChanges ? (
+                    <ConfirmAction
+                      triggerLabel="Load into draft"
+                      triggerClass="btn btn-link"
+                      prompt="This replaces your unpublished draft edits with this version."
+                      confirmLabel="Load it"
+                      cancelLabel="Keep my draft"
+                      onConfirm={() => restoreVersion(v.id)}
+                      fallbackFocusId="main"
+                    />
+                  ) : (
+                    <button
+                      type="button"
+                      className="btn btn-link"
+                      onClick={() => restoreVersion(v.id)}
+                    >
+                      Load into draft
+                    </button>
+                  )}
                 </li>
               ))}
             </ol>

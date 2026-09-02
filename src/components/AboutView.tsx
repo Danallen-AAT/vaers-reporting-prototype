@@ -155,7 +155,7 @@ publicLabel: 'Lot number on the vaccine record'  // public`}
 
       <Section id="verified" title="What has been verified">
         <ul>
-          <li><strong>165 automated tests across 25 files</strong>, run on every change. They cover
+          <li><strong>169 automated tests across 25 files</strong>, run on every change. They cover
             the branching matrix for both paths, the suppression rule, repeatable vaccine groups,
             validation, configuration overrides, completion progress, the mapping boundary, and
             accessibility.</li>
@@ -189,8 +189,10 @@ publicLabel: 'Lot number on the vaccine record'  // public`}
           decision, not by oversight.
         </p>
         <ul>
-          <li><strong>No back end and no database.</strong> Nothing is stored or transmitted. The
-            structured output is generated and shown, never sent.</li>
+          <li><strong>No back end and no database.</strong> No report data is stored or
+            transmitted: the structured output is generated and shown, never sent. Configuration
+            edits and the demo sign-in name are kept in the browser's own storage, which is how
+            the configuration screen works without a server, and they never leave the browser.</li>
           <li><strong>A representative subset of VAERS data elements</strong>, sufficient to
             demonstrate the branching architecture and both reporter paths. Under PWS 1.6 the
             authoritative list is that of the current VAERS form, established against a

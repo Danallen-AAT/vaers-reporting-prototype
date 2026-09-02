@@ -112,6 +112,23 @@ describe('draft and publish', () => {
     expect(screen.getByText(/unpublished changes/i)).toBeInTheDocument();
   }, 40000);
 
+  it('refuses to publish without a description of the change', async () => {
+    const user = userEvent.setup();
+    renderAdmin();
+    await user.clear(labelBox());
+    await user.type(labelBox(), 'Who is reporting');
+
+    // No description at all.
+    await user.click(publishButton());
+    expect(screen.getByRole('alert')).toHaveTextContent(/describe this change/i);
+    expect(screen.getByText(/unpublished changes/i)).toBeInTheDocument();
+
+    // A description of invisible characters is no better than none.
+    await user.type(screen.getByRole('textbox', { name: /describe this change/i }), '​');
+    await user.click(publishButton());
+    expect(screen.getByRole('alert')).toHaveTextContent(/describe this change/i);
+  }, 40000);
+
   it('discarding the draft restores the published wording', async () => {
     const user = userEvent.setup();
     renderAdmin();
