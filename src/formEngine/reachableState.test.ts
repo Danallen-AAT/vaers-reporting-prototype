@@ -1,0 +1,61 @@
+// ---------------------------------------------------------------------------
+// Reachability has to be judged over the states the running form can actually
+// hold, not over every combination of answer values.
+//
+// The case that motivated this: put a question in a provider-only section and
+// gate it on a public-only answer. A cartesian product over values contains
+// {reporterType: provider, relationToPatient: self} and concludes the question
+// is reachable there. The form never holds that state, because choosing a path
+// drops the other path's answers, so the question is reachable nowhere and a
+// required VAERS element leaves the instrument silently.
+// ---------------------------------------------------------------------------
+import { describe, it, expect } from 'vitest';
+import { checkConfiguration } from './configCheck';
+import { getVisibleForm } from './visibility';
+import { vaersForm } from '../config/vaersForm';
+import type { FormConfig } from '../config/types';
+
+const clone = (c: FormConfig): FormConfig => JSON.parse(JSON.stringify(c));
+
+/** A public-path choice question, and a section only providers ever see. */
+function strandReporterName(): FormConfig {
+  const c = clone(vaersForm);
+  const publicOnlyChoice = c.sections
+    .flatMap((s) => s.fields)
+    .find((f) => f.path === 'public' && (f.options?.length ?? 0) > 0);
+  const providerOnlySection = c.sections.find((s) => s.path === 'provider');
+  if (!publicOnlyChoice || !providerOnlySection) return c;
+
+  for (const section of c.sections) {
+    const i = section.fields.findIndex((f) => f.id === 'reporterName');
+    if (i === -1) continue;
+    const [field] = section.fields.splice(i, 1);
+    field.visibleWhen = [{ field: publicOnlyChoice.id, equals: publicOnlyChoice.options![0].value }];
+    providerOnlySection.fields.push(field);
+    break;
+  }
+  return c;
+}
+
+describe('reachability is judged over states the form can hold', () => {
+  it('reports a question stranded by a path-crossing rule', () => {
+    const config = strandReporterName();
+    const result = checkConfiguration(config);
+    expect(result.issues.some((i) => i.code === 'unreachable-field' && i.target === 'reporterName')).toBe(
+      true,
+    );
+    expect(result.ok).toBe(false);
+  });
+
+  it('and the form agrees: it appears on neither path', () => {
+    const config = strandReporterName();
+    const shows = (values: Record<string, string>) =>
+      getVisibleForm(config, values).some((s) => s.fields.some((f) => f.id === 'reporterName'));
+    expect(shows({ reporterType: 'public' })).toBe(false);
+    expect(shows({ reporterType: 'provider' })).toBe(false);
+  });
+
+  it('does not cry wolf: the shipped configuration still passes', () => {
+    expect(checkConfiguration(vaersForm).ok).toBe(true);
+  });
+});

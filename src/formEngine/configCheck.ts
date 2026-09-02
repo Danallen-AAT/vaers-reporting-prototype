@@ -14,6 +14,7 @@
 // ---------------------------------------------------------------------------
 import type { Condition, FieldConfig, FormConfig, FormValues } from '../config/types';
 import { getVisibleForm, visibleFieldIds } from './visibility';
+import { carryAnswersAcross } from './carryAcross';
 
 const CHOICE_TYPES = new Set(['radio', 'select', 'multiselect', 'checkbox']);
 /** Ceiling on the generated matrix, so a rich configuration cannot hang the UI. */
@@ -271,7 +272,16 @@ export function checkConfiguration(config: FormConfig): ConfigCheckResult {
 
   const fieldsSeen = new Set<string>();
   const sectionsSeen = new Set<string>();
-  for (const values of combos) {
+  for (const raw of combos) {
+    // A cartesian product over answer values includes states the running form
+    // will not hold. Choosing the provider path drops answers to public-only
+    // questions, so a rule depending on one of those can never be satisfied
+    // there, and asking whether a question is reachable has to be asked of the
+    // states the form can actually be in. Projecting each combination through
+    // the same function the application uses on a path switch is what makes
+    // the check's notion of reachable and the form's the same notion.
+    const values =
+      raw.reporterType === undefined ? raw : carryAnswersAcross(config, raw, raw.reporterType);
     for (const id of visibleFieldIds(config, values)) {
       fieldsSeen.add(id);
       // Repeated instances store under `${fieldId}__${instance}`.
