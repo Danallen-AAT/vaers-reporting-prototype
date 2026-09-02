@@ -127,6 +127,11 @@ export function FormRenderer() {
   );
 
   return (
+    // The survey is a sibling of the form, never a child of it. A form nested
+    // inside a form is invalid HTML: the browser drops the inner element, so
+    // the survey's own submit handler never runs and the survey submits the
+    // reporting form instead, navigating away and destroying the report.
+    <>
     <form className="vaers-form" onSubmit={onSubmit} noValidate>
       {activePath && (
         <div className="path-banner" role="status">
@@ -313,11 +318,13 @@ export function FormRenderer() {
         </section>
       )}
 
-      <SurveyDialog
-        open={surveyOpen}
-        onClose={() => setSurveyOpen(false)}
-        survey={config.surveys.postSubmission}
-      />
     </form>
+
+    <SurveyDialog
+      open={surveyOpen}
+      onClose={() => setSurveyOpen(false)}
+      survey={config.surveys.postSubmission}
+    />
+    </>
   );
 }

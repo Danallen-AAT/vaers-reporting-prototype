@@ -1,6 +1,6 @@
 // Test setup shared by all Vitest files.
 import '@testing-library/jest-dom/vitest';
-import { expect } from 'vitest';
+import { afterEach, expect } from 'vitest';
 import { toHaveNoViolations } from 'jest-axe';
 
 // Registers the axe-core matcher: expect(await axe(node)).toHaveNoViolations()
@@ -23,3 +23,33 @@ if (!window.matchMedia) {
       dispatchEvent: () => false,
     }) as MediaQueryList;
 }
+
+// React reports invalid DOM nesting through console.error rather than by
+// throwing, so a suite can stay green while the browser quietly discards an
+// element. That is exactly how a form nested inside a form survived here: the
+// warning printed on every run, and the tests passed anyway, while the nested
+// element was dropped and its submit handler never ran. Failing on these makes
+// the suite read its own output.
+const STRUCTURAL_WARNINGS = [
+  'cannot contain a nested',
+  'validateDOMNesting',
+  'cannot appear as a descendant',
+  'cannot appear as a child of',
+];
+
+const passThrough = console.error;
+let seen: string[] = [];
+
+console.error = (...args: unknown[]) => {
+  const text = args.map(String).join(' ');
+  if (STRUCTURAL_WARNINGS.some((pattern) => text.includes(pattern))) seen.push(text);
+  passThrough(...args);
+};
+
+afterEach(() => {
+  const found = seen;
+  seen = [];
+  if (found.length > 0) {
+    throw new Error(['React reported invalid DOM nesting during this test:', ...found].join('\n'));
+  }
+});

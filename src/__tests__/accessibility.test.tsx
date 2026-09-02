@@ -19,6 +19,26 @@ import { ConfigProvider } from '../state/ConfigStore';
 import { AdminPanel } from '../admin/AdminPanel';
 
 // WCAG 2.0 A and AA only, matching the Revised 508 Standards.
+/** The shortest valid public report, so late-stage states can be audited. */
+async function fillMinimalPublicReport(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole('radio', { name: 'Patient, parent, or caregiver' }));
+  await user.type(screen.getByLabelText(/your name/i), 'Test Reporter');
+  await user.selectOptions(screen.getByLabelText(/your relationship to the patient/i), 'parent');
+  await user.type(screen.getByLabelText(/how old was the patient/i), '6');
+  await user.selectOptions(screen.getByLabelText(/patient's sex/i), 'F');
+  const rec = screen.getByRole('group', { name: /has the patient recovered/i });
+  await user.click(within(rec).getByRole('radio', { name: 'Yes' }));
+  await user.selectOptions(screen.getByLabelText(/which vaccine\?/i), 'influenza');
+  await user.type(screen.getByLabelText(/date of the shot/i), '2026-08-20');
+  await user.type(screen.getByLabelText(/when did the problem start/i), '2026-08-21');
+  await user.type(
+    screen.getByLabelText(/describe what happened/i),
+    'Fever and swelling at the injection site.',
+  );
+  const ser = screen.getByRole('group', { name: /how serious was it/i });
+  await user.click(within(ser).getByRole('checkbox', { name: /none of the above/i }));
+}
+
 const AXE_OPTS = {
   runOnly: { type: 'tag' as const, values: ['wcag2a', 'wcag2aa'] },
   rules: {
@@ -200,6 +220,30 @@ describe('accessibility: admin configuration surface', () => {
     ).toBeInTheDocument();
     expect(await axe(container, AXE_OPTS)).toHaveNoViolations();
   }, 30000);
+
+  it('has no violations on the finalized report with its structured output', async () => {
+    const user = userEvent.setup();
+    const { container } = render(<App />);
+    await fillMinimalPublicReport(user);
+    await user.click(screen.getByRole('button', { name: /review submission/i }));
+    await screen.findByRole('heading', { name: /review your report/i });
+    await user.click(screen.getByRole('button', { name: /confirm and finalize report/i }));
+    await screen.findByRole('heading', { name: /structured output/i });
+
+    expect(await axe(container, AXE_OPTS)).toHaveNoViolations();
+  }, 40000);
+
+  it('has no violations with the post-submission survey open', async () => {
+    const user = userEvent.setup();
+    const { container } = render(<App />);
+    await fillMinimalPublicReport(user);
+    await user.click(screen.getByRole('button', { name: /review submission/i }));
+    await screen.findByRole('heading', { name: /review your report/i });
+    await user.click(screen.getByRole('button', { name: /confirm and finalize report/i }));
+    await screen.findByRole('dialog', { name: /how did that go/i });
+
+    expect(await axe(container, AXE_OPTS)).toHaveNoViolations();
+  }, 40000);
 
   it('has no violations with the publish history expanded', async () => {
     const user = userEvent.setup();

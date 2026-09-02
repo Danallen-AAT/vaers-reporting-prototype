@@ -86,4 +86,37 @@ describe('review-correct-confirm flow', () => {
     // The review stage has closed.
     expect(screen.queryByRole('heading', { name: /review your report/i })).toBeNull();
   }, 40000);
+
+  it('answering the post-submission survey keeps the finished report on screen', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await fillMinimalPublicReport(user);
+    await user.click(screen.getByRole('button', { name: /review submission/i }));
+    await screen.findByRole('heading', { name: /review your report/i });
+    await user.click(screen.getByRole('button', { name: /confirm and finalize report/i }));
+
+    const survey = await screen.findByRole('dialog', { name: /how did that go/i });
+    const scale = within(survey).getAllByRole('radio');
+    await user.click(scale[scale.length - 1]);
+    await user.click(within(survey).getByRole('button', { name: /send feedback/i }));
+
+    // The survey thanks the reporter, and the finished report and its
+    // structured output are still there. A survey that submits the reporting
+    // form instead would navigate away and destroy both.
+    expect(await within(survey).findByRole('status')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /structured output/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /download json/i })).toBeInTheDocument();
+  }, 40000);
+
+  it('nests no form inside another form in the finalized state', async () => {
+    const user = userEvent.setup();
+    const { container } = render(<App />);
+    await fillMinimalPublicReport(user);
+    await user.click(screen.getByRole('button', { name: /review submission/i }));
+    await screen.findByRole('heading', { name: /review your report/i });
+    await user.click(screen.getByRole('button', { name: /confirm and finalize report/i }));
+    await screen.findByRole('dialog', { name: /how did that go/i });
+
+    expect(container.querySelectorAll('form form')).toHaveLength(0);
+  }, 40000);
 });
