@@ -208,19 +208,21 @@ field.vaxType.option.mmr  ->  'MMR (sarampion, paperas, rubeola)'`}
 
       <Section id="verified" title="What has been verified">
         <ul>
-          <li><strong>171 automated tests across 25 files</strong>, run on every change. They cover
-            the branching matrix for both paths, the suppression rule, repeatable vaccine groups,
-            validation, configuration overrides, completion progress, the mapping boundary, and
-            accessibility.</li>
+          <li><strong>198 automated tests across 27 files</strong>, run on every change. They cover
+            the branching matrix for both paths in both languages, the suppression rule, repeatable
+            vaccine groups, validation, configuration overrides, completion progress, the mapping
+            boundary, translation coverage, and accessibility.</li>
           <li><strong>Behavioural verification driving a real browser.</strong> 21 of 21 checks
             passed, exercising actual key events rather than inspecting markup.</li>
-          <li><strong>Performance, measured on the deployed build with a cold cache.</strong> 0.43
+          <li><strong>Performance, measured on the deployed build with a cold cache.</strong> 0.2
             seconds on broadband and under 1 second on Fast 3G with a 4x CPU slowdown, across 4
-            requests and 95 kilobytes. The requirement is 3 seconds. The measurement script is in
-            the repository at <code>verification/perf.mjs</code>, so the figure can be re-run
-            rather than taken on trust.</li>
-          <li><strong>Accessibility.</strong> Zero automated violations across fifteen interface
-            states. An Accessibility Conformance Report accompanies the quotation.</li>
+            requests and 109 kilobytes with the Spanish content included. The requirement is 3
+            seconds. The measurement script is in the repository at{' '}
+            <code>verification/perf.mjs</code>, so the figure can be re-run rather than taken on
+            trust.</li>
+          <li><strong>Accessibility.</strong> Zero automated violations across twenty interface
+            states, English and Spanish. An Accessibility Conformance Report accompanies the
+            quotation.</li>
           <li><strong>Configuration cannot inject markup.</strong> A payload combining an element
             and an inline event handler was entered through the admin surface. It rendered as
             literal text, created no element, and executed nothing.</li>
