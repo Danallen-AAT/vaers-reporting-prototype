@@ -210,7 +210,7 @@ field.vaxType.option.mmr  ->  'MMR (sarampion, paperas, rubeola)'`}
 
       <Section id="verified" title="What has been verified">
         <ul>
-          <li><strong>198 automated tests across 27 files</strong>, run on every change. They cover
+          <li><strong>199 automated tests across 27 files</strong>, run on every change. They cover
             the branching matrix for both paths in both languages, the suppression rule, repeatable
             vaccine groups, validation, configuration overrides, completion progress, the mapping
             boundary, translation coverage, and accessibility.</li>
