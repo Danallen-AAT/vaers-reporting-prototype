@@ -43,16 +43,15 @@ export function AdminPanel({ onSignOut, user }: { onSignOut?: () => void; user?:
   // question added a moment ago is in the denominator immediately.
   const coverage = useMemo(() => {
     const keys = translatableKeys(draftConfig, draftFaqs);
+    const stale = new Set(configCheck.staleTranslations);
     return REQUIRED_LOCALES.map(({ code, label }) => {
       const have = draftTranslations(code);
-      return {
-        code,
-        label,
-        total: keys.length,
-        missing: keys.filter((k) => !have[k]?.trim()).length,
-      };
+      const missing = keys.filter((k) => !have[k]?.trim()).length;
+      // Wording whose English moved is outstanding too. Counting only what is
+      // absent would say "ready to publish" while the publish is refused.
+      return { code, label, total: keys.length, missing, stale: stale.size, outstanding: missing + stale.size };
     });
-  }, [draftConfig, draftFaqs, draftTranslations]);
+  }, [draftConfig, draftFaqs, draftTranslations, configCheck]);
 
   // A refused publish is announced by its alert, but a keyboard user who
   // pressed the button is left where they were, with the reason rendered below
@@ -119,19 +118,24 @@ export function AdminPanel({ onSignOut, user }: { onSignOut?: () => void; user?:
 
         <div className="lang-coverage" role="status" aria-label="Translation coverage">
           {coverage.map((c) => (
-            <p key={c.code} className={c.missing === 0 ? 'lc-ok' : 'lc-todo'}>
+            <p key={c.code} className={c.outstanding === 0 ? 'lc-ok' : 'lc-todo'}>
               <strong>{c.label}</strong>{' '}
-              {c.missing === 0 ? (
+              {c.outstanding === 0 ? (
                 <>
-                  complete. All {c.total} pieces of wording in this draft have a {c.label}{' '}
-                  version, so it is ready to publish.
+                  complete. All {c.total} pieces of wording in this draft have a current{' '}
+                  {c.label} version, so it is ready to publish.
                 </>
               ) : (
                 <>
-                  {c.total - c.missing} of {c.total} pieces of wording done.{' '}
-                  {c.missing === 1 ? 'One still needs' : `${c.missing} still need`} a {c.label}{' '}
-                  version, and the inputs are marked below. Publishing waits until they are
-                  written.
+                  {c.total - c.outstanding} of {c.total} pieces of wording done.{' '}
+                  {c.outstanding === 1 ? 'One still needs' : `${c.outstanding} still need`}{' '}
+                  {c.label}
+                  {c.stale > 0 && c.missing === 0
+                    ? ', because the English changed after it was written'
+                    : c.stale > 0
+                      ? `, ${c.missing} not written yet and ${c.stale} left behind by an edit to the English`
+                      : ''}
+                  . The inputs are marked below, and publishing waits until they are written.
                 </>
               )}
             </p>

@@ -181,9 +181,11 @@ describe('the publish gate on translation', () => {
     await user.clear(label);
     await user.type(label, 'Name of the person reporting');
 
-    expect(screen.getByRole('status', { name: /translation coverage/i })).toHaveTextContent(
-      /English changed|re-translating/i,
-    );
+    // The banner must agree with the gate: it cannot read "ready to publish"
+    // while the publish is refused.
+    const coverage = screen.getByRole('status', { name: /translation coverage/i });
+    expect(coverage).toHaveTextContent(/still needs Spanish, because the English changed/i);
+    expect(coverage).not.toHaveTextContent(/ready to publish/i);
     // The configuration is sound; only the wording is out of step.
     expect(screen.getByRole('status', { name: /configuration check/i })).toHaveTextContent(
       /passed/i,
@@ -216,9 +218,9 @@ describe('the publish gate on translation', () => {
     );
     await user.click(screen.getByRole('button', { name: 'Add question' }));
 
-    expect(screen.getByRole('status', { name: /translation coverage/i })).toHaveTextContent(
-      /still needs? a spanish version/i,
-    );
+    const coverage = screen.getByRole('status', { name: /translation coverage/i });
+    expect(coverage).toHaveTextContent(/One still needs Spanish/i);
+    expect(coverage).not.toHaveTextContent(/ready to publish/i);
     // The form itself is sound, so the integrity check must not claim a problem.
     expect(screen.getByRole('status', { name: /configuration check/i })).toHaveTextContent(
       /passed/i,

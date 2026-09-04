@@ -219,7 +219,7 @@ field.vaxType.option.mmr  ->  'MMR (sarampion, paperas, rubeola)'`}
             passed, exercising actual key events rather than inspecting markup.</li>
           <li><strong>Performance, measured on the deployed build with a cold cache.</strong> 0.2
             seconds on broadband and under 1 second on Fast 3G with a 4x CPU slowdown, across 4
-            requests and 109 kilobytes with the Spanish content included. The requirement is 3
+            requests and 111 kilobytes with the Spanish content included. The requirement is 3
             seconds. The measurement script is in the repository at{' '}
             <code>verification/perf.mjs</code>, so the figure can be re-run rather than taken on
             trust.</li>
