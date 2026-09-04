@@ -1606,7 +1606,7 @@ legend.field-label .tip-toggle {
 .publish-empty { list-style: none; margin-left: -20px; color: #4a4a4a; }
 
 /* ===========================================================================
-   Language (PWS 1.13, PRS#19)
+   Language (Amendment 2, Q&A 270)
    =========================================================================== */
 
 /* A thin utility strip above the navigation, which is where a federal site puts
@@ -1731,4 +1731,31 @@ legend.field-label .tip-toggle {
 .fe-options[open] .fe-translation .fe-cap {
   padding-left: 0;
   border-left: 0;
+}
+
+/* A translation whose English has been reworded since. Not missing, so it does
+   not read as missing; still outstanding, so it does not read as done. */
+.badge-stale {
+  display: inline-block;
+  margin-left: 0.4rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  font-style: normal;
+  padding: 0.05rem 0.45rem;
+  border-radius: 999px;
+  background: #fef3d0;
+  color: #6b4d00;
+  border: 1px solid #e6c34d;
+  white-space: nowrap;
+}
+
+/* What a reporter-type switch cleared. Informational, not an error: the form
+   did the right thing, and this is it saying so. */
+.switch-cleared {
+  margin: 0 0 12px;
+  padding: 8px 12px;
+  border-left: 3px solid var(--primary);
+  background: #f0f6fb;
+  color: var(--primary-dark);
+  font-size: 0.9rem;
 }

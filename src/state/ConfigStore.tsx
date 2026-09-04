@@ -36,6 +36,7 @@ import {
 } from '../formEngine/configCheck';
 import { defaultFaqs, type FaqItem } from '../config/faqs';
 import {
+  englishStrings,
   LOCALES,
   localizeConfig,
   localizeFaqs,
@@ -107,6 +108,13 @@ export interface ConfigOverrides {
    * live together or not at all.
    */
   translations?: Partial<Record<Locale, Translations>>;
+  /**
+   * The English each translated string was written against. Kept so a later
+   * edit to the English can be told apart from wording nobody has touched: a
+   * translation whose source sentence has been rewritten is stale, and a count
+   * of translated strings cannot see that.
+   */
+  translatedFrom?: Partial<Record<Locale, Translations>>;
 }
 
 const STORAGE_KEY = 'vaers.admin.v1';
@@ -131,7 +139,11 @@ const emptyOverrides = (): ConfigOverrides => ({
   added: [],
   moved: {},
   translations: {},
+  translatedFrom: {},
 });
+
+/** The English the shipped translations were written against: the schema itself. */
+const BASE_ENGLISH: Translations = englishStrings(vaersForm, defaultFaqs);
 
 /** Shipped wording for one language, with the configuration screen's edits on top. */
 function effectiveTranslations(ov: ConfigOverrides, locale: Locale): Translations {
@@ -267,6 +279,7 @@ function readSnapshot(key: string): { overrides: ConfigOverrides; faqs: FaqItem[
         added: Array.isArray(o.added) ? o.added.filter((a) => a && a.sectionId && a.field?.id) : [],
         moved: o.moved ?? {},
         translations: readTranslations(o.translations),
+        translatedFrom: readTranslations(o.translatedFrom),
       },
       faqs: Array.isArray(parsed.faqs) ? parsed.faqs : defaultFaqs,
     };
@@ -302,6 +315,7 @@ function loadState(): { overrides: ConfigOverrides; faqs: FaqItem[] } {
                 : [],
               moved: o.moved ?? {},
               translations: readTranslations(o.translations),
+              translatedFrom: readTranslations(o.translatedFrom),
             }
           : emptyOverrides(),
       faqs: Array.isArray(parsed.faqs) ? parsed.faqs : defaultFaqs,
@@ -387,7 +401,9 @@ interface ConfigContextValue {
   /** One translated string as the draft currently holds it, or '' if it has none. */
   translationOf: (locale: Locale, key: string) => string;
   /** Write one translated string into the draft. Blank clears the edit. */
-  setTranslation: (locale: Locale, key: string, text: string) => void;
+  setTranslation: (locale: Locale, key: string, text: string, sourceEnglish?: string) => void;
+  /** Keys whose English changed after their translation was written. */
+  staleTranslations: Set<string>;
   /** Keys with no translation yet, so an editor can mark the inputs that need one. */
   missingTranslations: Set<string>;
   /** The draft the configuration screen edits and previews. */
@@ -514,7 +530,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
   /**
    * The check the draft is held to. Every language other than the base is a
    * requirement, so a question added in English alone fails the check and
-   * cannot be published (PRS#19). Only the first language is reported at a
+   * cannot be published. Only the first language is reported at a
    * time, which keeps the message a person can act on.
    */
   const translationRequirement = useMemo(() => {
@@ -524,6 +540,8 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
       locale: required.code,
       languageName: required.label,
       translations: effectiveTranslations(overrides, required.code),
+      translatedFrom: overrides.translatedFrom?.[required.code] ?? {},
+      baseEnglish: BASE_ENGLISH,
       faqs,
     };
   }, [overrides, faqs]);
@@ -535,18 +553,37 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
     () => new Set(configCheck.missingTranslations),
     [configCheck],
   );
+  const staleTranslations = useMemo(
+    () => new Set(configCheck.staleTranslations),
+    [configCheck],
+  );
 
-  const setTranslation = useCallback((which: Locale, key: string, text: string) => {
-    setOverrides((prev) => {
-      const shipped = SHIPPED_TRANSLATIONS[which]?.[key];
-      const forLocale = { ...(prev.translations?.[which] ?? {}) };
-      // Typing the shipped wording back in is not an edit, so it clears rather
-      // than being stored as an override that shadows an identical string.
-      if (text === '' || text === shipped) delete forLocale[key];
-      else forLocale[key] = text;
-      return { ...prev, translations: { ...(prev.translations ?? {}), [which]: forLocale } };
-    });
-  }, []);
+  const setTranslation = useCallback(
+    (which: Locale, key: string, text: string, sourceEnglish?: string) => {
+      setOverrides((prev) => {
+        const shipped = SHIPPED_TRANSLATIONS[which]?.[key];
+        const forLocale = { ...(prev.translations?.[which] ?? {}) };
+        const fromLocale = { ...(prev.translatedFrom?.[which] ?? {}) };
+        // Typing the shipped wording back in is not an edit, so it clears rather
+        // than being stored as an override that shadows an identical string.
+        if (text === '' || text === shipped) {
+          delete forLocale[key];
+          delete fromLocale[key];
+        } else {
+          forLocale[key] = text;
+          // Stamped with the English on screen at the time, which is what makes
+          // a later edit to that English detectable as leaving this behind.
+          if (sourceEnglish !== undefined) fromLocale[key] = sourceEnglish;
+        }
+        return {
+          ...prev,
+          translations: { ...(prev.translations ?? {}), [which]: forLocale },
+          translatedFrom: { ...(prev.translatedFrom ?? {}), [which]: fromLocale },
+        };
+      });
+    },
+    [],
+  );
   const hasDraftChanges = useMemo(
     () =>
       JSON.stringify({ o: overrides, f: faqs }) !==
@@ -732,6 +769,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
     translationOf: (which, key) => overrides.translations?.[which]?.[key] ?? '',
     setTranslation,
     missingTranslations,
+    staleTranslations,
     draftConfig,
     draftFaqs: faqs,
     hasDraftChanges,

@@ -19,6 +19,9 @@ export interface ValidationMessages {
   email: string;
   number: string;
   min0: string;
+  future: string;
+  /** Takes {field}, the label of the date this one must not precede. */
+  before: string;
 }
 
 const EN: ValidationMessages = {
@@ -26,7 +29,16 @@ const EN: ValidationMessages = {
   email: 'Enter a valid email address.',
   number: 'Enter a number.',
   min0: 'Enter a value of 0 or more.',
+  future: 'This date is in the future. Check it and enter the date it happened.',
+  before: 'This date is before {field}. Check both dates.',
 };
+
+/** Today, as the yyyy-mm-dd string a date input produces, in local time. */
+function todayISO(): string {
+  const d = new Date();
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -49,6 +61,7 @@ export function validateField(
   values: FormValues,
   instance = 0,
   messages: ValidationMessages = EN,
+  labelOf?: (fieldId: string) => string,
 ): string | undefined {
   const value = values[repeatFieldId(field.id, instance)];
 
@@ -62,6 +75,18 @@ export function validateField(
     const n = Number(value);
     if (Number.isNaN(n)) return messages.number;
     if (n < 0) return messages.min0;
+  }
+  // Date sanity. The rules live in the schema, so a program officer can see
+  // them; the engine only applies them. ISO yyyy-mm-dd compares correctly as a
+  // string, which is what a date input always produces.
+  if (field.type === 'date' && typeof value === 'string' && value !== '') {
+    if (field.notInFuture && value > todayISO()) return messages.future;
+    if (field.notBefore) {
+      const other = values[repeatFieldId(field.notBefore, instance)] ?? values[field.notBefore];
+      if (typeof other === 'string' && other !== '' && value < other) {
+        return messages.before.replace('{field}', labelOf?.(field.notBefore) ?? field.notBefore);
+      }
+    }
   }
   return undefined;
 }
@@ -77,10 +102,14 @@ export function validateForm(
   messages: ValidationMessages = EN,
 ): Errors {
   const errors: Errors = {};
+  const labels = new Map(
+    config.sections.flatMap((s) => s.fields).map((f) => [f.id, f.label || f.id]),
+  );
+  const labelOf = (id: string) => labels.get(id) ?? id;
   for (const { fields, instances } of getVisibleForm(config, values)) {
     for (let i = 0; i < instances; i++) {
       for (const field of fields) {
-        const err = validateField(field, values, i, messages);
+        const err = validateField(field, values, i, messages, labelOf);
         if (err) errors[repeatFieldId(field.id, i)] = err;
       }
     }

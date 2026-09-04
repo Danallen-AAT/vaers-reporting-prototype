@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// One translated string, edited beside the English it translates (PWS 1.13).
+// One translated string, edited beside the English it translates (Amendment 2, Q&A 270).
 //
 // The English is shown, not just implied by an adjacent input, because a person
 // translating a question needs to read the sentence they are translating. The
@@ -29,7 +29,8 @@ export function TranslationField({
   describes: string;
   multiline?: boolean;
 }) {
-  const { translationOf, setTranslation, draftTranslations, missingTranslations } = useConfig();
+  const { translationOf, setTranslation, draftTranslations, missingTranslations, staleTranslations } =
+    useConfig();
 
   if (!english || english.trim() === '') return null;
 
@@ -39,6 +40,9 @@ export function TranslationField({
         const shipped = draftTranslations(code)[tKey] ?? '';
         const edited = translationOf(code, tKey);
         const missing = missingTranslations.has(tKey);
+        // The English was reworded after this was written, so it translates a
+        // sentence that is no longer on the form.
+        const stale = staleTranslations.has(tKey);
         const inputId = `t-${code}-${tKey}`;
         return (
           <label className="fe-row fe-translation" key={code} htmlFor={inputId}>
@@ -49,6 +53,14 @@ export function TranslationField({
                   needs {label}
                 </span>
               )}
+              {stale && (
+                <span
+                  className="badge badge-stale"
+                  title={`The English changed after this ${label} was written`}
+                >
+                  English changed
+                </span>
+              )}
             </span>
             {multiline ? (
               <textarea
@@ -56,20 +68,20 @@ export function TranslationField({
                 className="fe-input"
                 rows={2}
                 aria-label={`${caption} in ${label} for ${describes}`}
-                aria-invalid={missing || undefined}
+                aria-invalid={missing || stale || undefined}
                 placeholder={english}
                 value={edited || shipped}
-                onChange={(e) => setTranslation(code, tKey, e.target.value)}
+                onChange={(e) => setTranslation(code, tKey, e.target.value, english)}
               />
             ) : (
               <input
                 id={inputId}
                 className="fe-input"
                 aria-label={`${caption} in ${label} for ${describes}`}
-                aria-invalid={missing || undefined}
+                aria-invalid={missing || stale || undefined}
                 placeholder={english}
                 value={edited || shipped}
-                onChange={(e) => setTranslation(code, tKey, e.target.value)}
+                onChange={(e) => setTranslation(code, tKey, e.target.value, english)}
               />
             )}
           </label>

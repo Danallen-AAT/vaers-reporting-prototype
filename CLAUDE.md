@@ -35,7 +35,7 @@ This is not incidental. It is what makes the low-code admin surface possible: an
 7. **Post-submission satisfaction survey**
 8. **Structured output**, emitting clean VAERS-compatible JSON on submit
 9. **Performance**, targeting a page load under three seconds with a lean bundle
-10. **English and Spanish** (PWS 1.13, PRS#19) across the submission form, both
+10. **English and Spanish** (Amendment 2, Q&A 270) across the submission form, both
    satisfaction surveys, and the landing and navigation, as a content overlay on
    one schema rather than a second form, with publishing refused while any
    wording lacks its Spanish
@@ -49,7 +49,7 @@ Field-level detail, branching rules, and plain-language substitutions are in `VA
 - **Accessibility.** Section 508 conformance, targeting WCAG 2.0 Level A and AA.
 - **Performance.** Page load under three seconds.
 - **Bilingual equivalence.** Presentation and suppression must be identical in
-  English and Spanish for both submitter types (PRS#19), and the submitted
+  English and Spanish for both submitter types, and the submitted
   record must not differ by language. Asserted across the whole matrix in
   `src/config/locale.test.ts`.
 

@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// Interface strings (PWS 1.13, PRS#19).
+// Interface strings (Amendment 2, Q&A 270).
 //
 // Two kinds of text reach a reporter. The questions are configuration, edited
 // by CDC through the configuration screen and translated there, and they live
@@ -173,6 +173,14 @@ export const UI = {
     es: 'La redacción y los campos están adaptados a esta ruta.',
   },
   'path.change': { en: 'Change', es: 'Cambiar' },
+  'path.clearedOne': {
+    en: 'Changing who is reporting cleared one answer that only the other path asks for: {list}.',
+    es: 'Cambiar quién reporta borró una respuesta que solo se pide en la otra ruta: {list}.',
+  },
+  'path.clearedMany': {
+    en: 'Changing who is reporting cleared {n} answers that only the other path asks for: {list}.',
+    es: 'Cambiar quién reporta borró {n} respuestas que solo se piden en la otra ruta: {list}.',
+  },
   'path.changeLabel': { en: 'Change reporter type', es: 'Cambiar el tipo de informante' },
   'path.startOver': { en: 'Start over', es: 'Empezar de nuevo' },
   'path.startOverPrompt': {
@@ -294,6 +302,14 @@ export const UI = {
     en: 'Enter a value of 0 or more.',
     es: 'Ingrese un valor de 0 o más.',
   },
+  'validation.future': {
+    en: 'This date is in the future. Check it and enter the date it happened.',
+    es: 'Esta fecha está en el futuro. Revísela e ingrese la fecha en que ocurrió.',
+  },
+  'validation.before': {
+    en: 'This date is before {field}. Check both dates.',
+    es: 'Esta fecha es anterior a {field}. Revise ambas fechas.',
+  },
 
   // --- Document suggestions ------------------------------------------------
   'doc.title': { en: 'Documents that would help', es: 'Documentos que ayudarían' },
@@ -377,5 +393,7 @@ export function validationMessages(locale: Locale) {
     email: UI['validation.email'][locale],
     number: UI['validation.number'][locale],
     min0: UI['validation.min0'][locale],
+    future: UI['validation.future'][locale],
+    before: UI['validation.before'][locale],
   };
 }

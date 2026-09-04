@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// Language as an overlay (PWS 1.13, PRS#19).
+// Language as an overlay (Amendment 2, Q&A 270).
 //
 // The base schema is English. A second language is a flat map of string keys to
 // translated text, applied to the configuration before anything renders. That
@@ -174,6 +174,36 @@ export function missingKeys(
   faqs: FaqItem[] = [],
 ): string[] {
   return translatableKeys(config, faqs).filter((k) => !translations[k]?.trim());
+}
+
+/**
+ * Keys whose translation was written against different English from the English
+ * there now.
+ *
+ * Counting translated strings answers "is anything missing", which is not the
+ * question that matters over five years. An editor who reworks an English
+ * question and leaves the Spanish alone has not left a gap, they have left a
+ * translation of a sentence that no longer exists, and a count cannot see it.
+ * So each translation is remembered against the English it was made from:
+ * shipped wording against the shipped schema, and wording typed here against
+ * whatever the English said at the time.
+ */
+export function staleKeys(
+  config: FormConfig,
+  translations: Translations,
+  translatedFrom: Translations,
+  baseEnglish: Translations,
+  faqs: FaqItem[] = [],
+): string[] {
+  const current = englishStrings(config, faqs);
+  const out: string[] = [];
+  for (const key of translatableKeys(config, faqs)) {
+    if (!translations[key]?.trim()) continue; // missing, not stale
+    const source = translatedFrom[key] ?? baseEnglish[key];
+    if (source === undefined) continue; // nothing to compare against
+    if (current[key] !== source) out.push(key);
+  }
+  return out;
 }
 
 // --- Applying a translation -------------------------------------------------

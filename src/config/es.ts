@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// Spanish content for the form, the surveys and the FAQ (PWS 1.13, PRS#19).
+// Spanish content for the form, the surveys and the FAQ (Amendment 2, Q&A 270).
 //
 // This is authored content, not code: a map of the same string keys the English
 // schema produces. Nothing here affects branching, validation or the structured

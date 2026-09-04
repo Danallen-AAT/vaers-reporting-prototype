@@ -89,7 +89,7 @@ never key a branching rule on a label.
 
 ---
 
-## Language (PWS 1.13, PRS#19)
+## Language (Amendment 2, Q&A 270)
 
 ```
 vaersForm.ts (English)  ─┐
@@ -160,7 +160,7 @@ Keep it that way. Any new field type must be keyboard operable and screen reader
 - **No real integration.** Submission emits structured JSON to the screen.
 - **No real data.** Synthetic only, always.
 - **No machine translation in the authoring surface.** Translations are typed and reviewed. See the language section above for why.
-- **The admin screen and `#/about` stay in English.** The first is a CDC staff tool, the second is written for evaluators. PWS 1.13 scopes bilingual delivery to the submission form, the survey, and the landing and navigation.
+- **The admin screen and `#/about` stay in English.** The first is a CDC staff tool, the second is written for evaluators. Every reporter-facing surface is bilingual. Amendment 2 does not say which surfaces are in scope, so whether a CDC-facing screen is also required in Spanish is CDC's call; the mechanism is the same either way.
 
 ---
 

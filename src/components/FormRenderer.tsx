@@ -31,6 +31,7 @@ export function FormRenderer() {
     reset,
     addInstance,
     removeInstance,
+    clearedBySwitch,
   } = useForm();
   const { t } = useLocale();
   const sections = getVisibleForm(config, values);
@@ -166,6 +167,20 @@ export function FormRenderer() {
             }}
           />
         </div>
+      )}
+
+      {/* Switching path drops answers the new path does not ask for, which is
+          deliberate: a stale hidden answer must never drive branching. Saying
+          so is the part that was missing. */}
+      {clearedBySwitch.length > 0 && (
+        <p className="switch-cleared" role="status">
+          {clearedBySwitch.length === 1
+            ? t('path.clearedOne', { list: clearedBySwitch.join(', ') })
+            : t('path.clearedMany', {
+                n: clearedBySwitch.length,
+                list: clearedBySwitch.join(', '),
+              })}
+        </p>
       )}
 
       <ProgressPanel />

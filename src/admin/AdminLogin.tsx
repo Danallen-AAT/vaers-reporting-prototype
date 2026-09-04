@@ -9,7 +9,9 @@ export function AdminLogin({ onSignIn }: { onSignIn: (user: string) => void }) {
   const [user, setUser] = useState('cdc.program.owner');
 
   return (
-    <main id="main" className="admin-login" tabIndex={-1}>
+    // English by decision, like the screen behind it, and marked so a Spanish
+    // document does not claim it (WCAG 3.1.2).
+    <main id="main" className="admin-login" lang="en" tabIndex={-1}>
       <form
         className="login-card"
         onSubmit={(e) => {

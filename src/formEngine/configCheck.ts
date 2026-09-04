@@ -14,7 +14,7 @@
 // ---------------------------------------------------------------------------
 import type { Condition, FieldConfig, FormConfig, FormValues } from '../config/types';
 import type { FaqItem } from '../config/faqs';
-import { missingKeys, type Locale, type Translations } from '../config/locale';
+import { missingKeys, staleKeys, type Locale, type Translations } from '../config/locale';
 import { getVisibleForm, visibleFieldIds } from './visibility';
 import { carryAnswersAcross } from './carryAcross';
 
@@ -32,7 +32,8 @@ export type IssueCode =
   | 'unreachable-field'
   | 'unreachable-section'
   | 'lost-path'
-  | 'missing-translation';
+  | 'missing-translation'
+  | 'stale-translation';
 
 export interface ConfigIssue {
   code: IssueCode;
@@ -65,6 +66,13 @@ export interface ConfigCheckResult {
    * to mark the individual inputs.
    */
   missingTranslations: string[];
+  /**
+   * Keys whose English changed after the translation was written. A count of
+   * translated strings cannot see these, and they are the way a bilingual form
+   * actually rots: not a gap, but a translation of a sentence that has been
+   * rewritten underneath it.
+   */
+  staleTranslations: string[];
   /** The same gaps, grouped per question, in language a program officer reads. */
   translationIssues: ConfigIssue[];
   /** True when every language the form publishes in is complete. */
@@ -74,7 +82,7 @@ export interface ConfigCheckResult {
 /**
  * A language the configuration must be complete in before it can go live.
  * Passing one turns "every question has a Spanish version" into a condition of
- * publishing rather than a thing someone remembers to check (PRS#19).
+ * publishing rather than a thing someone remembers to check.
  */
 export interface TranslationRequirement {
   locale: Locale;
@@ -82,6 +90,10 @@ export interface TranslationRequirement {
   languageName: string;
   translations: Translations;
   faqs?: FaqItem[];
+  /** The English each translated string was written against, where recorded. */
+  translatedFrom?: Translations;
+  /** The English as shipped, the source for any translation that shipped with it. */
+  baseEnglish?: Translations;
 }
 
 /**
@@ -484,6 +496,16 @@ export function checkConfiguration(
   const missingTranslations = translation
     ? missingKeys(config, translation.translations, translation.faqs ?? [])
     : [];
+  const staleTranslations =
+    translation && translation.baseEnglish
+      ? staleKeys(
+          config,
+          translation.translations,
+          translation.translatedFrom ?? {},
+          translation.baseEnglish,
+          translation.faqs ?? [],
+        )
+      : [];
   const translationIssues: ConfigIssue[] = [];
   if (translation && missingTranslations.length > 0) {
     const labelOfField = new Map(fields.map((f) => [f.id, f.label || f.id]));
@@ -518,6 +540,33 @@ export function checkConfiguration(
     }
   }
 
+  if (translation && staleTranslations.length > 0) {
+    const labelOfField = new Map(fields.map((f) => [f.id, f.label || f.id]));
+    const titleOfSection = new Map(config.sections.map((s) => [s.id, s.title || s.id]));
+    const byOwner = new Map<string, { target: string; describe: string; count: number }>();
+    for (const key of staleTranslations) {
+      const { kind, id } = keyOwner(key);
+      const describe =
+        kind === 'field'
+          ? `the question "${labelOfField.get(id) ?? id}"`
+          : kind === 'section'
+            ? `the "${titleOfSection.get(id) ?? id}" section`
+            : kind === 'survey'
+              ? 'the satisfaction survey'
+              : kind === 'faq'
+                ? 'a frequently asked question'
+                : 'the form title and introduction';
+      const ownerKey = `${kind}:${id}`;
+      const seen = byOwner.get(ownerKey);
+      if (seen) seen.count += 1;
+      else byOwner.set(ownerKey, { target: id || kind, describe, count: 1 });
+    }
+    for (const { target, describe, count } of byOwner.values()) {
+      const sentence = `The English changed in ${describe} after its ${translation.languageName} was written, so ${count === 1 ? 'one piece of wording needs' : `${count} pieces of wording need`} re-translating.`;
+      translationIssues.push({ code: 'stale-translation', target, message: sentence });
+    }
+  }
+
   return {
     ok: issues.length === 0,
     issues,
@@ -525,7 +574,8 @@ export function checkConfiguration(
     fieldsChecked: fields.length,
     truncated,
     missingTranslations,
+    staleTranslations,
     translationIssues,
-    translationOk: missingTranslations.length === 0,
+    translationOk: missingTranslations.length === 0 && staleTranslations.length === 0,
   };
 }

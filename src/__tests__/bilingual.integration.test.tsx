@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// Bilingual reporting, end to end (PWS 1.13, PRS#19).
+// Bilingual reporting, end to end (Amendment 2, Q&A 270).
 //
 // Three claims are made in the quotation and are tested here rather than
 // described: a reporter can change language anywhere and keep the work they
@@ -169,6 +169,36 @@ describe('screens that stay English', () => {
 });
 
 describe('the publish gate on translation', () => {
+  it('refuses to publish when the English was reworded after its Spanish', async () => {
+    // A reviewer found this: change a live question's English through the
+    // screen, leave the Spanish, and a count of translated strings still says
+    // complete. Nothing is missing; what is wrong is that the Spanish now
+    // translates a sentence that is no longer on the form.
+    const user = userEvent.setup();
+    renderAdmin();
+
+    const label = screen.getByLabelText('Label for reporterName');
+    await user.clear(label);
+    await user.type(label, 'Name of the person reporting');
+
+    expect(screen.getByRole('status', { name: /translation coverage/i })).toHaveTextContent(
+      /English changed|re-translating/i,
+    );
+    // The configuration is sound; only the wording is out of step.
+    expect(screen.getByRole('status', { name: /configuration check/i })).toHaveTextContent(
+      /passed/i,
+    );
+
+    await user.type(screen.getByLabelText(/describe this change/i), 'Reword the name question');
+    await user.click(screen.getByRole('button', { name: /publish to the live form/i }));
+
+    const refusal = screen.getByRole('alert');
+    expect(refusal).toHaveTextContent(/not published/i);
+    expect(refusal).toHaveTextContent(/English changed/i);
+    expect(refusal).toHaveTextContent(/Name of the person reporting/);
+  }, 60000);
+
+
   it('opens with complete coverage for the shipped configuration', () => {
     renderAdmin();
     const coverage = screen.getByRole('status', { name: /translation coverage/i });

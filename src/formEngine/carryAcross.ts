@@ -14,6 +14,36 @@ function onPath(path: string | undefined, type: string): boolean {
   return path === undefined || path === 'both' || path === type;
 }
 
+/**
+ * The questions that hold an answer now and are not asked on the path being
+ * switched to. Dropping them is deliberate, because a stale hidden answer must
+ * never drive branching on the new path. Doing it without saying so is not:
+ * this is what lets the form tell a reporter what it just cleared.
+ */
+export function answersLostBySwitching(
+  config: FormConfig,
+  values: FormValues,
+  nextType: FormValues[string],
+): string[] {
+  const type = String(nextType);
+  const lost: string[] = [];
+  for (const section of config.sections) {
+    const sectionStays = onPath(section.path, type);
+    for (const field of section.fields) {
+      if (sectionStays && onPath(field.path, type)) continue;
+      const answered = Object.entries(values).some(
+        ([key, v]) =>
+          key.replace(/__\d+$/, '') === field.id &&
+          v !== undefined &&
+          v !== '' &&
+          !(Array.isArray(v) && v.length === 0),
+      );
+      if (answered) lost.push(field.label || field.id);
+    }
+  }
+  return lost;
+}
+
 export function carryAnswersAcross(
   config: FormConfig,
   values: FormValues,

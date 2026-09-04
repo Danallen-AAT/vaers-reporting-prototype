@@ -31,6 +31,12 @@ async function publish(u: ReturnType<typeof userEvent.setup>, label: string, val
   const box = screen.getByLabelText('Label for reporterName');
   await u.clear(box);
   await u.type(box, value);
+  // Rewording the English leaves its Spanish translating a sentence that is no
+  // longer on the form, and publishing is refused for that, so a wording change
+  // carries both languages or neither.
+  const spanish = screen.getByLabelText('Label in Spanish for reporterName');
+  await u.clear(spanish);
+  await u.type(spanish, `${value} (es)`);
   await u.type(screen.getByRole('textbox', { name: /describe this change/i }), label);
   await u.click(screen.getByRole('button', { name: /publish to the live form/i }));
 }

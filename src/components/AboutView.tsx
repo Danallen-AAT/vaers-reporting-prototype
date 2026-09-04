@@ -128,7 +128,8 @@ publicLabel: 'Lot number on the vaccine record'  // public`}
 
       <Section id="bilingual" title="Two languages, one form">
         <p>
-          Amendment 0002 added PWS Task 1.13 and PRS#19: the submission form, the satisfaction
+          Amendment 2 updates the PWS to include English and Spanish options, by way of Q&A 270:
+          the submission form, the satisfaction
           survey and the landing and navigation are offered in English and Spanish. The same
           decision that makes plain language a second label makes a second language a second{' '}
           <em>content set</em>, applied to the schema before anything renders.
@@ -150,7 +151,7 @@ field.vaxType.option.mmr  ->  'MMR (sarampion, paperas, rubeola)'`}
             answer <em>value</em>, never a label, and values are not translated. The Spanish form is
             the same instrument as the English one by construction rather than by inspection, and
             the test suite asserts identical presentation and suppression across the whole generated
-            matrix on both reporter paths, which is what PRS#19 measures.</li>
+            matrix on both reporter paths.</li>
           <li><strong>The submitted record is identical.</strong> Output is keyed to VAERS data
             elements and carries answer values, so a report filed in Spanish reaches CDC
             byte-for-byte as the same report filed in English. A test asserts that too.</li>
@@ -210,7 +211,7 @@ field.vaxType.option.mmr  ->  'MMR (sarampion, paperas, rubeola)'`}
 
       <Section id="verified" title="What has been verified">
         <ul>
-          <li><strong>199 automated tests across 27 files</strong>, run on every change. They cover
+          <li><strong>212 automated tests across 28 files</strong>, run on every change. They cover
             the branching matrix for both paths in both languages, the suppression rule, repeatable
             vaccine groups, validation, configuration overrides, completion progress, the mapping
             boundary, translation coverage, and accessibility.</li>
@@ -271,10 +272,15 @@ field.vaxType.option.mmr  ->  'MMR (sarampion, paperas, rubeola)'`}
             translator where translation is required, and OMB M-23-22 tells agencies not to rely on
             automatic translation alone. The configuration screen is deliberately built for
             authoring and review, with no machine-translation shortcut into it.</li>
-          <li><strong>The configuration screen and this page stay in English.</strong> The first is
-            a CDC staff tool and the second is written for evaluators of this prototype. PWS 1.13
-            scopes bilingual delivery to the submission form, the satisfaction survey, and the
-            landing and navigation, and all three are bilingual.</li>
+          <li><strong>The configuration screen and this page stay in English.</strong> The first
+            is a CDC staff tool and the second is written for evaluators of this prototype. Every
+            reporter-facing surface is bilingual: the form, both surveys, the FAQ, and the landing
+            and navigation. Amendment 2 says the PWS is updated to include English and Spanish
+            options, without naming which surfaces, so whether a CDC-facing administrative screen
+            is also required in Spanish is CDC's call. The mechanism does not care: the
+            configuration screen's own wording would move into the same string table the form
+            already uses. AAT states this as an open question rather than assuming the narrower
+            reading in its own favour.</li>
           <li><strong>Synthetic data only.</strong> No real personal or health information has ever
             been entered, and the interface says so on every page.</li>
         </ul>

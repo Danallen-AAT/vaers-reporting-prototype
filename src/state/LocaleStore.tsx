@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// The reporter's language (PWS 1.13, PRS#19).
+// The reporter's language (Amendment 2, Q&A 270).
 //
 // Language is a reporter preference, not configuration, so it lives apart from
 // the config store: a member of the public choosing Spanish must not change

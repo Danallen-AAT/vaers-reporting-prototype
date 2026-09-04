@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// Language switch (PWS 1.13).
+// Language switch (Amendment 2, Q&A 270).
 //
 // Three decisions worth stating, because each one is a way this control is
 // commonly shipped broken.

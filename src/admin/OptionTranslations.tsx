@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// The translated answers of one choice question (PWS 1.13).
+// The translated answers of one choice question (Amendment 2, Q&A 270).
 //
 // Answers are labels too, so a choice question is only translated when its
 // choices are. But some lists are long and are not the reason anyone opened

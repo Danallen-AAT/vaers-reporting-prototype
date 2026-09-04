@@ -36,6 +36,19 @@ const renderForm = () =>
   );
 
 const labelBox = () => screen.getByLabelText('Label for reporterName');
+const spanishBox = () => screen.getByLabelText('Label in Spanish for reporterName');
+
+/**
+ * Reword the question in both languages. Changing the English alone now leaves
+ * the Spanish translating a sentence that is no longer there, and publishing is
+ * refused for it, so a wording change means both or neither.
+ */
+async function reword(user: ReturnType<typeof userEvent.setup>, english: string, spanish: string) {
+  await user.clear(labelBox());
+  await user.type(labelBox(), english);
+  await user.clear(spanishBox());
+  await user.type(spanishBox(), spanish);
+}
 const publishButton = () => screen.getByRole('button', { name: /publish to the live form/i });
 
 describe('draft and publish', () => {
@@ -49,8 +62,7 @@ describe('draft and publish', () => {
     const user = userEvent.setup();
     const admin = renderAdmin();
 
-    await user.clear(labelBox());
-    await user.type(labelBox(), 'Who is reporting');
+    await reword(user, 'Who is reporting', 'Quien reporta');
 
     expect(screen.getByText(/unpublished changes/i)).toBeInTheDocument();
     const preview = within(screen.getByRole('complementary', { name: /live form preview/i }));
@@ -68,8 +80,7 @@ describe('draft and publish', () => {
     const user = userEvent.setup();
     const admin = renderAdmin();
 
-    await user.clear(labelBox());
-    await user.type(labelBox(), 'Who is reporting');
+    await reword(user, 'Who is reporting', 'Quien reporta');
     await user.type(
       screen.getByRole('textbox', { name: /describe this change/i }),
       'Plainer wording',
@@ -115,8 +126,7 @@ describe('draft and publish', () => {
   it('refuses to publish without a description of the change', async () => {
     const user = userEvent.setup();
     renderAdmin();
-    await user.clear(labelBox());
-    await user.type(labelBox(), 'Who is reporting');
+    await reword(user, 'Who is reporting', 'Quien reporta');
 
     // No description at all.
     await user.click(publishButton());

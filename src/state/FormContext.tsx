@@ -19,7 +19,7 @@ import {
   type SectionConfig,
 } from '../config/types';
 import { getReporterPath, getRepeatCount, type ActivePath } from '../formEngine/visibility';
-import { carryAnswersAcross } from '../formEngine/carryAcross';
+import { answersLostBySwitching, carryAnswersAcross } from '../formEngine/carryAcross';
 import { validateForm, type Errors } from '../formEngine/validation';
 import { validationMessages } from '../config/ui';
 import { useLocale } from './LocaleStore';
@@ -35,6 +35,11 @@ interface FormContextValue {
   removeInstance: (section: SectionConfig, instance: number) => void;
   validate: () => boolean;
   reset: () => void;
+  /**
+   * Questions cleared by the last reporter-type switch, so the form can say
+   * what it discarded instead of discarding it silently.
+   */
+  clearedBySwitch: string[];
 }
 
 const FormContext = createContext<FormContextValue | null>(null);
@@ -52,6 +57,7 @@ export function FormProvider({
   const [values, setValues] = useState<FormValues>(initialValues ?? {});
   const [errors, setErrors] = useState<Errors>({});
   const [submitted, setSubmitted] = useState(false);
+  const [clearedBySwitch, setClearedBySwitch] = useState<string[]>([]);
   const { locale } = useLocale();
   const messages = useMemo(() => validationMessages(locale), [locale]);
 
@@ -61,6 +67,7 @@ export function FormProvider({
       // across, and answers whose questions exist only on the other path drop
       // with their questions, so stale hidden values cannot drive branching.
       if (id === 'reporterType' && prev.reporterType !== value) {
+        setClearedBySwitch(answersLostBySwitching(config, prev, value));
         return carryAnswersAcross(config, prev, value);
       }
       return { ...prev, [id]: value };
@@ -118,6 +125,7 @@ export function FormProvider({
     setValues({});
     setErrors({});
     setSubmitted(false);
+    setClearedBySwitch([]);
   };
 
   const activePath = useMemo(() => getReporterPath(values), [values]);
@@ -133,6 +141,7 @@ export function FormProvider({
     removeInstance,
     validate,
     reset,
+    clearedBySwitch,
   };
 
   return <FormContext.Provider value={ctx}>{children}</FormContext.Provider>;

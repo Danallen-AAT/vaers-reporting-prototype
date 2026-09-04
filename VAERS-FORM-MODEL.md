@@ -107,7 +107,7 @@ On submit, emit a JSON object keyed by these field ids (VAERS-compatible mapping
 4. Provider, admin error **with NO** AE → **AE section fully suppressed**, only Error details collected. ← the marquee behavior.
 5. Seriousness "died" → date-of-death field appears; "hospitalized" → hospital-days appears.
 
-## Language (PWS 1.13, PRS#19)
+## Language (Amendment 2, Q&A 270)
 
 Spanish is a second **content set**, not a second form. The schema above is the
 English base; `src/config/es.ts` maps every translatable string key to its
@@ -131,8 +131,7 @@ compares an answer *value* (`equals: 'yes'`, `includes: 'hospitalized'`), and
 values are never translated. So all five PRS#1 scenarios above hold identically
 in Spanish, and `src/config/locale.test.ts` asserts presentation, suppression
 and the submitted record match across the whole generated matrix in both
-languages. That is the PRS#19 acceptance criterion, measured rather than
-asserted.
+languages, measured rather than asserted.
 
 Interface text that is not part of the form (buttons, validation messages, the
 completion rail, navigation) lives in `src/config/ui.ts`, typed per language so

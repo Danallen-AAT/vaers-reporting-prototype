@@ -98,6 +98,14 @@ export interface FieldConfig {
   fileAccept?: string[];
   /** File fields: per-file size limit in megabytes. */
   fileMaxMB?: number;
+  /**
+   * Date sanity, expressed in the schema like everything else so the rules are
+   * visible to a program officer rather than buried in the engine.
+   * `notInFuture` rejects a date after today; `notBefore` rejects a date
+   * earlier than the answer to another date question.
+   */
+  notInFuture?: boolean;
+  notBefore?: string;
   /** Field is shown only when ALL of these predicates hold. */
   visibleWhen?: Condition[];
   /** Field is hidden when ALL of these predicates hold (overrides visibleWhen). */

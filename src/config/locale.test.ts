@@ -1,8 +1,8 @@
 // ---------------------------------------------------------------------------
-// The language overlay (PWS 1.13, PRS#19).
+// The language overlay (Amendment 2, Q&A 270).
 //
-// PRS#19 asks for 100% correct field presentation and suppression for both
-// submitter types in both languages. The claim these tests defend is stronger
+// Amendment 2 requires English and Spanish options. The claim these tests defend
+// is stronger
 // than translating and then checking the result: because language is applied as
 // an overlay on top of the schema, and branching rules key on option values
 // rather than on labels, the Spanish form is the same instrument as the English
@@ -15,6 +15,7 @@ import { defaultFaqs } from './faqs';
 import { es } from './es';
 import {
   englishStrings,
+  staleKeys,
   localizeConfig,
   localizeFaqs,
   missingKeys,
@@ -216,6 +217,75 @@ describe('the publish gate', () => {
   it('treats whitespace as no translation at all', () => {
     const gappy = { ...es, 'field.vaxLot.label': '   ' };
     expect(missingKeys(vaersForm, gappy, defaultFaqs)).toEqual(['field.vaxLot.label']);
+  });
+});
+
+describe('a translation whose English moved underneath it', () => {
+  // Found by a reviewer who changed a live question's English label through the
+  // configuration screen and left the Spanish alone. Counting translated
+  // strings said everything was complete, because nothing was missing. What was
+  // wrong was that the Spanish now translated a sentence no longer on the form.
+  const base = englishStrings(vaersForm, defaultFaqs);
+
+  const withRewordedEnglish = {
+    ...vaersForm,
+    sections: vaersForm.sections.map((s) =>
+      s.id === 'reporter'
+        ? {
+            ...s,
+            fields: s.fields.map((f) =>
+              f.id === 'reporterName' ? { ...f, label: 'Name of the person reporting' } : f,
+            ),
+          }
+        : s,
+    ),
+  };
+
+  it('is not missing, so a count of translated strings cannot see it', () => {
+    expect(missingKeys(withRewordedEnglish, es, defaultFaqs)).toEqual([]);
+  });
+
+  it('is reported as stale', () => {
+    expect(staleKeys(withRewordedEnglish, es, {}, base, defaultFaqs)).toEqual([
+      'field.reporterName.label',
+    ]);
+  });
+
+  it('blocks publishing, and names the question', () => {
+    const result = checkConfiguration(withRewordedEnglish, vaersForm, {
+      locale: 'es',
+      languageName: 'Spanish',
+      translations: es,
+      translatedFrom: {},
+      baseEnglish: base,
+      faqs: defaultFaqs,
+    });
+    expect(result.ok).toBe(true); // the configuration itself is sound
+    expect(result.missingTranslations).toEqual([]);
+    expect(result.staleTranslations).toEqual(['field.reporterName.label']);
+    expect(result.translationOk).toBe(false);
+    const issue = result.translationIssues.find((i) => i.code === 'stale-translation');
+    expect(issue?.message).toContain('Name of the person reporting');
+    expect(issue?.message).toContain('re-translating');
+  });
+
+  it('clears once the translation is written against the new English', () => {
+    const result = checkConfiguration(withRewordedEnglish, vaersForm, {
+      locale: 'es',
+      languageName: 'Spanish',
+      translations: { ...es, 'field.reporterName.label': 'Nombre de quien reporta' },
+      translatedFrom: { 'field.reporterName.label': 'Name of the person reporting' },
+      baseEnglish: base,
+      faqs: defaultFaqs,
+    });
+    expect(result.staleTranslations).toEqual([]);
+    expect(result.translationOk).toBe(true);
+  });
+
+  it('leaves untouched wording alone', () => {
+    // Only the reworded string is stale. Everything else stays done.
+    const stale = staleKeys(withRewordedEnglish, es, {}, base, defaultFaqs);
+    expect(stale).toHaveLength(1);
   });
 });
 

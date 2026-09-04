@@ -150,6 +150,7 @@ export const vaersForm: FormConfig = {
         },
         {
           id: 'patientDob',
+          notInFuture: true,
           vaersElement: 'vaers2_item02_dateOfBirth',
           label: 'Date of birth',
           publicLabel: "Patient's date of birth",
@@ -340,6 +341,7 @@ export const vaersForm: FormConfig = {
         },
         {
           id: 'vaxDate',
+          notInFuture: true,
           vaersElement: 'vaers2_item04_vaccinationDate',
           label: 'Vaccination date',
           publicLabel: 'Date of the shot',
@@ -425,6 +427,8 @@ export const vaersForm: FormConfig = {
       fields: [
         {
           id: 'aeOnsetDate',
+          notInFuture: true,
+          notBefore: 'vaxDate',
           vaersElement: 'vaers2_item05_onsetDate',
           label: 'Adverse event onset date',
           publicLabel: 'When did the problem start?',
@@ -475,6 +479,8 @@ export const vaersForm: FormConfig = {
         },
         {
           id: 'aeDeathDate',
+          notInFuture: true,
+          notBefore: 'aeOnsetDate',
           vaersElement: 'vaers2_item21_deathDate',
           label: 'Date of death',
           type: 'date',
