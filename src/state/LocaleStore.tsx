@@ -68,6 +68,10 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     document.documentElement.lang = locale;
+    // The tab title travels with the language for the same reason the document
+    // language does: a screen reader announces it on load, and an English title
+    // over a Spanish page is read with the wrong pronunciation rules.
+    document.title = uiText('chrome.pageTitle', locale);
   }, [locale]);
 
   const setLocale = useCallback((next: Locale) => {

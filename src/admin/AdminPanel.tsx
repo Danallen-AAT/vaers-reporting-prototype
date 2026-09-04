@@ -7,7 +7,7 @@
 // preview on the right at once, while reporters stay on the published
 // version until a publish: the "no redeploy" low-code story, on camera.
 // ---------------------------------------------------------------------------
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ConfirmAction } from '../components/ConfirmAction';
 import { REQUIRED_LOCALES, useConfig } from '../state/ConfigStore';
 import { FormProvider } from '../state/FormContext';
@@ -33,6 +33,7 @@ export function AdminPanel({ onSignOut, user }: { onSignOut?: () => void; user?:
   } = useConfig();
   const [changeLabel, setChangeLabel] = useState('');
   const [publishError, setPublishError] = useState<string | null>(null);
+  const refusalRef = useRef<HTMLParagraphElement>(null);
   const [publishedNote, setPublishedNote] = useState<string | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [previewPath, setPreviewPath] = useState<'public' | 'provider'>('provider');
@@ -52,6 +53,14 @@ export function AdminPanel({ onSignOut, user }: { onSignOut?: () => void; user?:
       };
     });
   }, [draftConfig, draftFaqs, draftTranslations]);
+
+  // A refused publish is announced by its alert, but a keyboard user who
+  // pressed the button is left where they were, with the reason rendered below
+  // the fold. Moving focus to the reason puts the explanation where the person
+  // who asked for it is looking.
+  useEffect(() => {
+    if (publishError) refusalRef.current?.focus();
+  }, [publishError]);
 
   const previewConfig = useMemo(
     () => localizeConfig(draftConfig, previewLocale, draftTranslations(previewLocale)),
@@ -213,7 +222,7 @@ export function AdminPanel({ onSignOut, user }: { onSignOut?: () => void; user?:
             />
           </div>
           {publishError && (
-            <p className="fe-refused" role="alert">
+            <p className="fe-refused" role="alert" tabIndex={-1} ref={refusalRef}>
               <strong>Not published.</strong> {publishError}
             </p>
           )}

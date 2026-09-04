@@ -31,6 +31,13 @@ export const UI = {
     en: '· CDC reporting prototype',
     es: '· Prototipo de reporte CDC',
   },
+  // The browser tab, which a screen reader announces on load. It is as much a
+  // reporter-facing string as anything on the page, and it lived in index.html
+  // where the rest of this table could not see it.
+  'chrome.pageTitle': {
+    en: 'VAERS Reporting (Prototype)',
+    es: 'Reporte de VAERS (Prototipo)',
+  },
   'nav.primary': { en: 'Primary', es: 'Principal' },
   'nav.home': { en: 'Home', es: 'Inicio' },
   'nav.report': { en: 'Report', es: 'Reportar' },

@@ -52,6 +52,7 @@ describe('a reporter choosing Spanish', () => {
   it('opens in English and says so on the document', () => {
     renderReporter();
     expect(document.documentElement.lang).toBe('en');
+    expect(document.title).toBe('VAERS Reporting (Prototype)');
     expect(englishButton()).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
       'Report a problem after a vaccine (VAERS)',
@@ -68,6 +69,8 @@ describe('a reporter choosing Spanish', () => {
     // Without it the Spanish is read with English pronunciation, and nothing
     // on screen looks wrong (WCAG 3.1.1, a Level A criterion).
     expect(document.documentElement.lang).toBe('es');
+    // The tab title is a reporter-facing string too, announced on load.
+    expect(document.title).toBe('Reporte de VAERS (Prototipo)');
     expect(spanishButton()).toHaveAttribute('aria-pressed', 'true');
 
     // Configuration content, translated through the overlay.
@@ -181,6 +184,9 @@ describe('the publish gate on translation', () => {
     expect(refusal).toHaveTextContent(/not published/i);
     expect(refusal).toHaveTextContent(/Clinic region/);
     expect(refusal).toHaveTextContent(/Spanish/);
+    // The person who pressed the button is taken to the reason, rather than
+    // left at a control that appeared to do nothing.
+    expect(refusal).toHaveFocus();
   }, 60000);
 
   it('publishes once the Spanish is supplied', async () => {
