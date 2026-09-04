@@ -381,7 +381,7 @@ select.input {
   .nav-inner {
     flex-wrap: wrap;
     justify-content: center;
-    row-gap: 0.15rem;
+    row-gap: 0.35rem;
   }
   .site-nav nav {
     flex-wrap: wrap;
@@ -393,6 +393,7 @@ select.input {
   text-decoration: none;
   font-weight: 800;
   font-size: 1.05rem;
+  flex-shrink: 0;
 }
 .brand span {
   font-weight: 400;
@@ -407,8 +408,9 @@ select.input {
   color: #eaf1f8;
   text-decoration: none;
   font-weight: 600;
-  padding: 0.4rem 0.8rem;
+  padding: 0.4rem 0.6rem;
   border-radius: var(--radius);
+  white-space: nowrap;
 }
 .site-nav nav a:hover {
   background: rgba(255, 255, 255, 0.12);
@@ -1602,3 +1604,119 @@ legend.field-label .tip-toggle {
 .ph-label { font-weight: 600; }
 .ph-meta { color: #4a4a4a; margin-left: 8px; }
 .publish-empty { list-style: none; margin-left: -20px; color: #4a4a4a; }
+
+/* ===========================================================================
+   Language (PWS 1.13, PRS#19)
+   =========================================================================== */
+
+/* A thin utility strip above the navigation, which is where a federal site puts
+   a language switch. It is on every page, including the form, so a reporter who
+   has already started a report can still change language: answers are held by
+   value, so nothing is lost by switching. */
+.utility-bar {
+  background: var(--primary-darker);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+}
+.utility-inner {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding-block: 0.3rem;
+}
+.lang-toggle {
+  display: inline-flex;
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  border-radius: 999px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.lang-toggle .seg {
+  background: transparent;
+  color: #fff;
+  padding: 0.2rem 0.8rem;
+  font-size: 0.82rem;
+}
+.lang-toggle .seg[aria-pressed='true'] {
+  background: #fff;
+  color: var(--primary-darker);
+}
+
+/* A translation input sits under the English it translates, indented so the
+   pairing is visible without reading the captions. */
+.fe-translation .fe-cap {
+  padding-left: 0.75rem;
+  border-left: 3px solid var(--primary);
+  font-weight: 500;
+  font-style: italic;
+}
+.fe-translation .fe-input {
+  background: #fbfdff;
+}
+.fe-translation .fe-input[aria-invalid='true'] {
+  border-color: #a3231b;
+  background: #fdf3f2;
+}
+.badge-missing {
+  display: inline-block;
+  margin-left: 0.4rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  font-style: normal;
+  padding: 0.05rem 0.45rem;
+  border-radius: 999px;
+  background: #fdf3f2;
+  color: #7d1b15;
+  border: 1px solid #d99b95;
+  white-space: nowrap;
+}
+
+/* Coverage summary above the configuration check, so the two conditions of
+   publishing are read together. */
+.lang-coverage {
+  margin: 12px 0 0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+/* Coloured per language rather than per panel, so one incomplete language does
+   not make a complete one look outstanding. Avoids :has for the same reason
+   the rest of this sheet does: it must degrade to something readable. */
+.lang-coverage p {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid;
+}
+.lang-coverage .lc-ok {
+  border-color: #1a7f5a;
+  background: #f2fbf7;
+  color: #10503a;
+}
+.lang-coverage .lc-bad {
+  border-color: #a3231b;
+  background: #fdf3f2;
+  color: #7d1b15;
+}
+.lang-coverage p + p {
+  margin-top: 0.35rem;
+}
+
+/* Answer translations, grouped so a long choice list does not bury the wording
+   an editor came to change. */
+.fe-options > summary {
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ink-muted);
+  padding: 0.3rem 0;
+}
+.fe-options > summary .badge-missing {
+  font-style: normal;
+}
+.fe-options[open] {
+  border-left: 3px solid var(--primary);
+  padding-left: 0.75rem;
+}
+.fe-options[open] .fe-translation .fe-cap {
+  padding-left: 0;
+  border-left: 0;
+}

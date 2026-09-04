@@ -124,6 +124,59 @@ publicLabel: 'Lot number on the vaccine record'  // public`}
         </p>
       </Section>
 
+      <Section id="bilingual" title="Two languages, one form">
+        <p>
+          Amendment 0002 added PWS Task 1.13 and PRS#19: the submission form, the satisfaction
+          survey and the landing and navigation are offered in English and Spanish. The same
+          decision that makes plain language a second label makes a second language a second{' '}
+          <em>content set</em>, applied to the schema before anything renders.
+        </p>
+        <p>
+          A translation is a flat map from a stable key to the translated text. The key is built
+          from the identity of the thing it belongs to, so it survives rewording:
+        </p>
+        <pre className="about-code" aria-label="Example of a translated string">
+{`field.vaxLot.publicLabel  ->  'Numero de lote (en la tarjeta o el registro, si lo sabe)'
+field.vaxType.option.mmr  ->  'MMR (sarampion, paperas, rubeola)'`}
+        </pre>
+        <p>
+          Three consequences follow, and they are the reason for doing it this way rather than
+          building a second form.
+        </p>
+        <ul>
+          <li><strong>Branching cannot differ between languages.</strong> Every rule compares an
+            answer <em>value</em>, never a label, and values are not translated. The Spanish form is
+            the same instrument as the English one by construction rather than by inspection, and
+            the test suite asserts identical presentation and suppression across the whole generated
+            matrix on both reporter paths, which is what PRS#19 measures.</li>
+          <li><strong>The submitted record is identical.</strong> Output is keyed to VAERS data
+            elements and carries answer values, so a report filed in Spanish reaches CDC
+            byte-for-byte as the same report filed in English. A test asserts that too.</li>
+          <li><strong>A third language is a third map.</strong> No new components, no new rules,
+            no second copy of the form to keep in step.</li>
+        </ul>
+        <p>
+          <strong>The part that matters over five years is the gate, not the translation.</strong>{' '}
+          Anyone can translate a form once. Keeping it translated through years of amendments is
+          the problem. So the configuration screen edits English and Spanish side by side, the
+          integrity check counts the translated strings a configuration needs against the ones it
+          has, and a draft with any gap <strong>cannot be published</strong>: the publish is refused
+          and names the question. A question cannot reach reporters in one language only, because
+          the tooling will not let it, not because someone remembered.
+        </p>
+        <p>
+          Where a string somehow has no translation, reporters see the English rather than a blank
+          or a placeholder. Gaps are made loud in the configuration screen, which is where they can
+          be fixed, and silent on the form, where they cannot.
+        </p>
+        <p>
+          Choosing a language sets <code>lang</code> on the document, which is what tells a screen
+          reader to switch voice. Without it Spanish is read with English pronunciation rules. It is
+          WCAG 3.1.1, a Level A criterion, and it is the part of bilingual support most easily
+          shipped broken, because nothing on screen looks wrong.
+        </p>
+      </Section>
+
       <Section id="mapping" title="The mapping boundary, and what it maps today">
         <p>
           Every field can carry the VAERS data element it maps to. On submission, one isolated
@@ -206,6 +259,18 @@ publicLabel: 'Lot number on the vaccine record'  // public`}
           <li><strong>Physical handset verification and assistive technology testing have not been
             performed.</strong> Both are planned against the Government-defined device matrix after
             award, and both are recorded as limitations in the conformance report.</li>
+          <li><strong>The Spanish content demonstrates the mechanism, not a certified clinical
+            translation.</strong> It was authored for this prototype and has not been through
+            qualified-translator review. Production Spanish for a national reporting instrument is
+            authored and reviewed by qualified translators and approved by CDC, which owns the
+            Spanish wording exactly as it owns the English. 45 CFR 92.201(c)(2) requires a qualified
+            translator where translation is required, and OMB M-23-22 tells agencies not to rely on
+            automatic translation alone. The configuration screen is deliberately built for
+            authoring and review, with no machine-translation shortcut into it.</li>
+          <li><strong>The configuration screen and this page stay in English.</strong> The first is
+            a CDC staff tool and the second is written for evaluators of this prototype. PWS 1.13
+            scopes bilingual delivery to the submission form, the satisfaction survey, and the
+            landing and navigation, and all three are bilingual.</li>
           <li><strong>Synthetic data only.</strong> No real personal or health information has ever
             been entered, and the interface says so on every page.</li>
         </ul>

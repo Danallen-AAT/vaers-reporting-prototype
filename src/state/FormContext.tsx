@@ -21,6 +21,8 @@ import {
 import { getReporterPath, getRepeatCount, type ActivePath } from '../formEngine/visibility';
 import { carryAnswersAcross } from '../formEngine/carryAcross';
 import { validateForm, type Errors } from '../formEngine/validation';
+import { validationMessages } from '../config/ui';
+import { useLocale } from './LocaleStore';
 
 interface FormContextValue {
   config: FormConfig;
@@ -50,6 +52,8 @@ export function FormProvider({
   const [values, setValues] = useState<FormValues>(initialValues ?? {});
   const [errors, setErrors] = useState<Errors>({});
   const [submitted, setSubmitted] = useState(false);
+  const { locale } = useLocale();
+  const messages = useMemo(() => validationMessages(locale), [locale]);
 
   const setValue = (id: string, value: FormValues[string]) => {
     setValues((prev) => {
@@ -63,10 +67,12 @@ export function FormProvider({
     });
   };
 
-  // Live revalidation, but only once the user has attempted to submit.
+  // Live revalidation, but only once the user has attempted to submit. Changing
+  // language re-runs it too, so messages already on screen are rewritten rather
+  // than left behind in the language the reporter has just left.
   useEffect(() => {
-    if (submitted) setErrors(validateForm(config, values));
-  }, [values, submitted, config]);
+    if (submitted) setErrors(validateForm(config, values, messages));
+  }, [values, submitted, config, messages]);
 
   const addInstance = (section: SectionConfig) => {
     if (!section.repeat) return;
@@ -102,7 +108,7 @@ export function FormProvider({
   };
 
   const validate = () => {
-    const e = validateForm(config, values);
+    const e = validateForm(config, values, messages);
     setErrors(e);
     setSubmitted(true);
     return Object.keys(e).length === 0;

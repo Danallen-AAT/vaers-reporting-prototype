@@ -35,6 +35,10 @@ This is not incidental. It is what makes the low-code admin surface possible: an
 7. **Post-submission satisfaction survey**
 8. **Structured output**, emitting clean VAERS-compatible JSON on submit
 9. **Performance**, targeting a page load under three seconds with a lean bundle
+10. **English and Spanish** (PWS 1.13, PRS#19) across the submission form, both
+   satisfaction surveys, and the landing and navigation, as a content overlay on
+   one schema rather than a second form, with publishing refused while any
+   wording lacks its Spanish
 
 Field-level detail, branching rules, and plain-language substitutions are in `VAERS-FORM-MODEL.md`.
 
@@ -44,6 +48,10 @@ Field-level detail, branching rules, and plain-language substitutions are in `VA
 - **Responsiveness.** Correct rendering and functional completion on mobile and modern desktop browsers.
 - **Accessibility.** Section 508 conformance, targeting WCAG 2.0 Level A and AA.
 - **Performance.** Page load under three seconds.
+- **Bilingual equivalence.** Presentation and suppression must be identical in
+  English and Spanish for both submitter types (PRS#19), and the submitted
+  record must not differ by language. Asserted across the whole matrix in
+  `src/config/locale.test.ts`.
 
 ## Two rules that keep the architecture intact
 
@@ -51,13 +59,22 @@ Field-level detail, branching rules, and plain-language substitutions are in `VA
 
 **2. The form engine stays pure.** No React imports in `src/formEngine/`. That is what allows the entire branching matrix to be unit tested without rendering anything.
 
+**3. Language is an overlay, never a fork.** The base schema is English. A second
+language is a flat map from string key to translated text, applied by
+`localizeConfig` before anything renders. Never duplicate the schema to
+translate it, and never key a branching rule on a label: rules compare answer
+*values*, which is what makes both languages the same instrument. Reporter-facing
+interface text lives in `src/config/ui.ts`, typed per locale so a missing
+translation fails the build. New reporter-facing text goes in one of those two
+places, never inline in a component.
+
 ## Layout
 
 | Path | Contents |
 |---|---|
-| `src/config/` | The form as data. `vaersForm.ts` is the whole form; `types.ts` defines the schema types. |
+| `src/config/` | The form as data. `vaersForm.ts` is the whole form; `types.ts` defines the schema types; `locale.ts` is the language overlay and its key builders; `es.ts` is the Spanish content; `ui.ts` is the interface strings. |
 | `src/formEngine/` | Pure functions: branching, validation, structured output, document suggestion rules. |
-| `src/state/` | React context. `ConfigStore` holds base schema plus admin overrides; `FormContext` holds answers and errors. |
+| `src/state/` | React context. `ConfigStore` holds base schema plus admin overrides and translations; `FormContext` holds answers and errors; `LocaleStore` holds the reporter's language and sets `document.documentElement.lang`. |
 | `src/components/` | `FormRenderer` draws what the engine says is visible; `Field` renders every field type accessibly. |
 | `src/admin/` | The low-code surface: section, field, and FAQ editors with a live preview. |
 
@@ -79,6 +96,7 @@ Do invest in:
 
 - Keep the test suite green. Branching tests are not optional.
 - Accessibility is a merge requirement, not a follow-up. Any new field type must be keyboard operable and screen reader labelled.
+- Any new reporter-facing string needs its Spanish in the same change. Interface strings will not compile without it; configuration wording will not publish without it.
 - Match the surrounding code style. Comment density is moderate and explains why, not what.
 - No em dashes in code, comments, UI strings, or documentation.
 

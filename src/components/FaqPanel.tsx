@@ -6,6 +6,7 @@
 import { useEffect, useRef } from 'react';
 import type { FaqItem } from '../config/faqs';
 import { useFocusTrap } from '../hooks/useFocusTrap';
+import { useLocale } from '../state/LocaleStore';
 
 interface FaqPanelProps {
   open: boolean;
@@ -16,6 +17,7 @@ interface FaqPanelProps {
 export function FaqPanel({ open, onClose, faqs }: FaqPanelProps) {
   const closeRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
+  const { t } = useLocale();
 
   useFocusTrap(open, dialogRef);
 
@@ -42,24 +44,24 @@ export function FaqPanel({ open, onClose, faqs }: FaqPanelProps) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="faq-dialog-head">
-          <h2 id="faq-dialog-title">Frequently asked questions</h2>
+          <h2 id="faq-dialog-title">{t('faq.title')}</h2>
           <button
             ref={closeRef}
             type="button"
             className="faq-close"
             onClick={onClose}
-            aria-label="Close frequently asked questions"
+            aria-label={t('faq.close')}
           >
             ✕
           </button>
         </div>
         {faqs.length === 0 ? (
-          <p className="faq-empty">No FAQ entries yet.</p>
+          <p className="faq-empty">{t('faq.empty')}</p>
         ) : (
           <dl className="faq-list">
             {faqs.map((f) => (
               <div className="faq-item" key={f.id}>
-                <dt>{f.question || '(untitled question)'}</dt>
+                <dt>{f.question || t('faq.untitled')}</dt>
                 <dd>{f.answer}</dd>
               </div>
             ))}

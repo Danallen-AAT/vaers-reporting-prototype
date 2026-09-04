@@ -6,6 +6,7 @@
 import { useState } from 'react';
 import { repeatFieldId, type FieldConfig } from '../config/types';
 import { useForm } from '../state/FormContext';
+import { useLocale } from '../state/LocaleStore';
 import { FileUpload } from './FileUpload';
 
 function labelFor(field: FieldConfig, isPublic: boolean): string {
@@ -22,6 +23,7 @@ function tooltipFor(field: FieldConfig, isPublic: boolean): string | undefined {
 
 export function Field({ field, instance = 0 }: { field: FieldConfig; instance?: number }) {
   const { values, errors, setValue, activePath } = useForm();
+  const { t } = useLocale();
   const isPublic = activePath === 'public';
   const [tipOpen, setTipOpen] = useState(false);
 
@@ -49,7 +51,7 @@ export function Field({ field, instance = 0 }: { field: FieldConfig; instance?: 
       <span className="req" aria-hidden="true">
         *
       </span>
-      <span className="sr-only"> (required)</span>
+      <span className="sr-only"> {t('field.requiredSr')}</span>
     </>
   ) : null;
 
@@ -72,7 +74,9 @@ export function Field({ field, instance = 0 }: { field: FieldConfig; instance?: 
     >
       <span aria-hidden="true">?</span>
       <span className="sr-only">
-        {tipOpen ? 'Hide guidance for' : 'More guidance for'} {label}
+        {tipOpen
+          ? t('field.hideGuidance', { label })
+          : t('field.moreGuidance', { label })}
       </span>
     </button>
   ) : null;
@@ -181,7 +185,7 @@ export function Field({ field, instance = 0 }: { field: FieldConfig; instance?: 
           value={typeof value === 'string' ? value : ''}
           onChange={(e) => setValue(key, e.target.value)}
         >
-          <option value="">Select one</option>
+          <option value="">{t('field.selectOne')}</option>
           {field.options?.map((opt) => (
             <option key={opt.value} value={opt.value}>
               {opt.label}

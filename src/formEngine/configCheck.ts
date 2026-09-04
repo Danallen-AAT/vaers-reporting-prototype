@@ -13,6 +13,8 @@
 // runs in the test suite and behind the admin surface.
 // ---------------------------------------------------------------------------
 import type { Condition, FieldConfig, FormConfig, FormValues } from '../config/types';
+import type { FaqItem } from '../config/faqs';
+import { missingKeys, type Locale, type Translations } from '../config/locale';
 import { getVisibleForm, visibleFieldIds } from './visibility';
 import { carryAnswersAcross } from './carryAcross';
 
@@ -29,7 +31,8 @@ export type IssueCode =
   | 'cycle'
   | 'unreachable-field'
   | 'unreachable-section'
-  | 'lost-path';
+  | 'lost-path'
+  | 'missing-translation';
 
 export interface ConfigIssue {
   code: IssueCode;
@@ -47,6 +50,37 @@ export interface ConfigCheckResult {
   fieldsChecked: number;
   /** True when the matrix hit its ceiling and was cut short. */
   truncated: boolean;
+  /**
+   * Translation keys the configuration needs and the translation does not
+   * carry. The issue list carries one entry per question or section, which is
+   * what a person reads; this is the exact list, which is what the editor uses
+   * to mark the individual inputs.
+   */
+  missingTranslations: string[];
+}
+
+/**
+ * A language the configuration must be complete in before it can go live.
+ * Passing one turns "every question has a Spanish version" into a condition of
+ * publishing rather than a thing someone remembers to check (PRS#19).
+ */
+export interface TranslationRequirement {
+  locale: Locale;
+  /** How the language is named to the person editing, for example "Spanish". */
+  languageName: string;
+  translations: Translations;
+  faqs?: FaqItem[];
+}
+
+/**
+ * The owner of a translation key, and how that owner is described to a person.
+ * Keys are built from ids, so this is parsing rather than a second source of
+ * truth: `field.vaxLot.tooltip` belongs to `vaxLot`, and so does
+ * `field.vaxLot.option.covid19`.
+ */
+function keyOwner(key: string): { kind: string; id: string } {
+  const [kind, id = ''] = key.split('.');
+  return { kind, id };
 }
 
 /**
@@ -227,6 +261,7 @@ function pathsReachingEachField(config: FormConfig, combos: FormValues[]): Map<s
 export function checkConfiguration(
   config: FormConfig,
   baseline?: FormConfig,
+  translation?: TranslationRequirement,
 ): ConfigCheckResult {
   const fields = allFields(config);
   const byId = new Map(fields.map((f) => [f.id, f]));
@@ -428,11 +463,51 @@ export function checkConfiguration(
     }
   }
 
+  // 6. Every question must exist in every language the form is published in.
+  //    A question added in English alone would appear in Spanish as English
+  //    text, which is not a bilingual form, it is a form with a hole in it. The
+  //    gap is reported per question rather than per string, because a person
+  //    fixes a question, and the exact key list is returned separately for the
+  //    editor to mark the individual inputs.
+  const missingTranslations = translation
+    ? missingKeys(config, translation.translations, translation.faqs ?? [])
+    : [];
+  if (translation && missingTranslations.length > 0) {
+    const labelOfField = new Map(fields.map((f) => [f.id, f.label || f.id]));
+    const titleOfSection = new Map(config.sections.map((s) => [s.id, s.title || s.id]));
+    const byOwner = new Map<string, { target: string; describe: string; count: number }>();
+    for (const key of missingTranslations) {
+      const { kind, id } = keyOwner(key);
+      const describe =
+        kind === 'field'
+          ? `the question "${labelOfField.get(id) ?? id}"`
+          : kind === 'section'
+            ? `the "${titleOfSection.get(id) ?? id}" section`
+            : kind === 'survey'
+              ? 'the satisfaction survey'
+              : kind === 'faq'
+                ? 'a frequently asked question'
+                : 'the form title and introduction';
+      const ownerKey = `${kind}:${id}`;
+      const seen = byOwner.get(ownerKey);
+      if (seen) seen.count += 1;
+      else byOwner.set(ownerKey, { target: id || kind, describe, count: 1 });
+    }
+    for (const { target, describe, count } of byOwner.values()) {
+      issues.push({
+        code: 'missing-translation',
+        target,
+        message: `${count === 1 ? 'One piece of text in' : `${count} pieces of text in`} ${describe} ${count === 1 ? 'has' : 'have'} no ${translation.languageName} version yet. Add the ${translation.languageName} wording before publishing.`,
+      });
+    }
+  }
+
   return {
     ok: issues.length === 0,
     issues,
     combinations: combos.length,
     fieldsChecked: fields.length,
     truncated,
+    missingTranslations,
   };
 }

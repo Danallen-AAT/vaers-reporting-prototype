@@ -60,9 +60,9 @@ The admin surface holds no private copy of anything. It edits the same configura
 
 | Path | What lives there |
 |---|---|
-| `src/config/` | The form as data. `vaersForm.ts` is the entire form, all seven sections. `types.ts` defines the schema types. |
+| `src/config/` | The form as data. `vaersForm.ts` is the entire form, all seven sections. `types.ts` defines the schema types. `locale.ts` is the language overlay, `es.ts` the Spanish content, `ui.ts` the interface strings. |
 | `src/formEngine/` | Pure functions, no React. Branching, validation, structured output, document suggestion rules. |
-| `src/state/` | React context. `ConfigStore` holds base schema plus overrides; `FormContext` holds answers and errors. |
+| `src/state/` | React context. `ConfigStore` holds base schema plus overrides; `FormContext` holds answers and errors; `LocaleStore` holds the reporter's language. |
 | `src/components/` | `FormRenderer` draws what the engine says is visible. `Field` renders every field type accessibly. |
 | `src/admin/` | The low-code surface: section, field, and FAQ editors, with a live preview. |
 
@@ -81,6 +81,50 @@ suppressWhen: [
 ```
 
 **2. The engine stays pure.** No React imports in `src/formEngine/`. That is what lets the entire branching matrix be unit tested without rendering anything, and it is why the suite runs in milliseconds.
+
+**3. Language is an overlay, never a fork.** The base schema is English. Any
+other language is a flat map from string key to text, applied to the
+configuration before it renders. Never copy the schema to translate it, and
+never key a branching rule on a label.
+
+---
+
+## Language (PWS 1.13, PRS#19)
+
+```
+vaersForm.ts (English)  ─┐
+                         ├─→ localizeConfig(config, locale, translations) ─→ the form in one language
+es.ts + admin edits     ─┘
+```
+
+Rules compare answer **values**, and values are not translated, so the Spanish
+form is the same instrument as the English one by construction. The submitted
+record is keyed to VAERS data elements and carries values, so a report filed in
+Spanish is byte-identical to the same report filed in English. Both are asserted
+across the whole generated matrix in `src/config/locale.test.ts`.
+
+Two kinds of text, and they are kept apart on purpose:
+
+| | Where | Who edits it | How completeness is enforced |
+|---|---|---|---|
+| Questions, sections, surveys, FAQ | `config/locale.ts` keys, content in `config/es.ts` plus admin edits | CDC, through `#/admin` | The integrity check counts what a configuration needs against what it has. **A draft with a gap cannot be published.** |
+| Buttons, validation, progress, navigation | `config/ui.ts` | developers | `Record<Locale, string>` per key, so a missing language is a compile error |
+
+Adding a language:
+
+1. Add it to `LOCALES` in `config/locale.ts`.
+2. `ui.ts` stops compiling. Fill in the new column. That is the interface done.
+3. Create the content map, the way `es.ts` does. `englishStrings(vaersForm, defaultFaqs)` produces every key with its English text to translate from.
+4. Nothing else. No component changes, no new rules.
+
+A string with no translation falls back to English for reporters, never to a
+blank. Gaps are made loud in the configuration screen, where they can be fixed,
+and silent on the form, where they cannot.
+
+The Spanish shipped here demonstrates the mechanism. It has not been through
+qualified-translator review, and production Spanish for a national reporting
+instrument would be, with CDC owning the wording as it owns the English
+(45 CFR 92.201(c)(2); OMB M-23-22 section 3.c).
 
 ---
 
@@ -115,6 +159,8 @@ Keep it that way. Any new field type must be keyboard operable and screen reader
 - **No real authentication.** The admin login is a mock and accepts anything.
 - **No real integration.** Submission emits structured JSON to the screen.
 - **No real data.** Synthetic only, always.
+- **No machine translation in the authoring surface.** Translations are typed and reviewed. See the language section above for why.
+- **The admin screen and `#/about` stay in English.** The first is a CDC staff tool, the second is written for evaluators. PWS 1.13 scopes bilingual delivery to the submission form, the survey, and the landing and navigation.
 
 ---
 

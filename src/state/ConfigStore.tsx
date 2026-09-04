@@ -35,6 +35,30 @@ import {
   type ConfigCheckResult,
 } from '../formEngine/configCheck';
 import { defaultFaqs, type FaqItem } from '../config/faqs';
+import {
+  LOCALES,
+  localizeConfig,
+  localizeFaqs,
+  type Locale,
+  type Translations,
+} from '../config/locale';
+import { es } from '../config/es';
+import { useLocale } from './LocaleStore';
+
+/**
+ * The languages the form is published in, and the content that makes each one
+ * real. English is the base schema itself, so it needs no map; every other
+ * language is a translation map that ships with the build and can be extended
+ * through the configuration screen. Adding a third language is adding a row.
+ */
+const SHIPPED_TRANSLATIONS: Partial<Record<Locale, Translations>> = { es };
+
+/**
+ * The languages a draft must be complete in before it can go live. English is
+ * excluded because it is the base: a question always exists in English by
+ * virtue of having been typed.
+ */
+export const REQUIRED_LOCALES = LOCALES.filter((l) => l.code !== 'en');
 
 export interface FieldOverride {
   label?: string;
@@ -75,6 +99,14 @@ export interface ConfigOverrides {
    * its rule and its identity, so a relocation cannot alter what it collects.
    */
   moved?: Record<string, string>;
+  /**
+   * Translated wording authored through the configuration screen, keyed by
+   * language and then by string key. It sits in the overrides rather than
+   * beside them because it is the same kind of thing: content CDC owns, held as
+   * a draft, and made live by the same publish. A question and its Spanish go
+   * live together or not at all.
+   */
+  translations?: Partial<Record<Locale, Translations>>;
 }
 
 const STORAGE_KEY = 'vaers.admin.v1';
@@ -93,7 +125,34 @@ export interface PublishedVersion {
   overrides: ConfigOverrides;
   faqs: FaqItem[];
 }
-const emptyOverrides = (): ConfigOverrides => ({ fields: {}, sections: {}, added: [], moved: {} });
+const emptyOverrides = (): ConfigOverrides => ({
+  fields: {},
+  sections: {},
+  added: [],
+  moved: {},
+  translations: {},
+});
+
+/** Shipped wording for one language, with the configuration screen's edits on top. */
+function effectiveTranslations(ov: ConfigOverrides, locale: Locale): Translations {
+  return { ...(SHIPPED_TRANSLATIONS[locale] ?? {}), ...(ov.translations?.[locale] ?? {}) };
+}
+
+/** Only the keys a stored object actually holds, discarding anything malformed. */
+function readTranslations(value: unknown): Partial<Record<Locale, Translations>> {
+  if (!value || typeof value !== 'object') return {};
+  const out: Partial<Record<Locale, Translations>> = {};
+  for (const { code } of LOCALES) {
+    const map = (value as Record<string, unknown>)[code];
+    if (!map || typeof map !== 'object') continue;
+    const clean: Translations = {};
+    for (const [k, v] of Object.entries(map as Record<string, unknown>)) {
+      if (typeof v === 'string') clean[k] = v;
+    }
+    out[code] = clean;
+  }
+  return out;
+}
 
 // --- Override application ---------------------------------------------------
 
@@ -207,6 +266,7 @@ function readSnapshot(key: string): { overrides: ConfigOverrides; faqs: FaqItem[
         sections: o.sections ?? {},
         added: Array.isArray(o.added) ? o.added.filter((a) => a && a.sectionId && a.field?.id) : [],
         moved: o.moved ?? {},
+        translations: readTranslations(o.translations),
       },
       faqs: Array.isArray(parsed.faqs) ? parsed.faqs : defaultFaqs,
     };
@@ -241,6 +301,7 @@ function loadState(): { overrides: ConfigOverrides; faqs: FaqItem[] } {
                 ? o.added.filter((a) => a && a.sectionId && a.field && a.field.id)
                 : [],
               moved: o.moved ?? {},
+              translations: readTranslations(o.translations),
             }
           : emptyOverrides(),
       faqs: Array.isArray(parsed.faqs) ? parsed.faqs : defaultFaqs,
@@ -321,6 +382,14 @@ interface ConfigContextValue {
   setFieldCondition: (fieldId: string, conds: Condition[] | null) => ConditionResult;
   /** Live integrity check of the draft now being edited. */
   configCheck: ConfigCheckResult;
+  /** Draft wording in one language, shipped content with draft edits on top. */
+  draftTranslations: (locale: Locale) => Translations;
+  /** One translated string as the draft currently holds it, or '' if it has none. */
+  translationOf: (locale: Locale, key: string) => string;
+  /** Write one translated string into the draft. Blank clears the edit. */
+  setTranslation: (locale: Locale, key: string, text: string) => void;
+  /** Keys with no translation yet, so an editor can mark the inputs that need one. */
+  missingTranslations: Set<string>;
   /** The draft the configuration screen edits and previews. */
   draftConfig: FormConfig;
   /** FAQ content in the draft. */
@@ -358,6 +427,7 @@ export interface ConditionResult {
 const ConfigContext = createContext<ConfigContextValue | null>(null);
 
 export function ConfigProvider({ children }: { children: ReactNode }) {
+  const { locale } = useLocale();
   const initial = useRef(loadState());
   const initialDraft = useRef(readSnapshot(DRAFT_KEY) ?? initial.current);
   // `overrides` / `faqs` are the DRAFT the admin edits. `published` is what the
@@ -406,11 +476,77 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener('storage', onStorage);
   }, []);
 
-  /** What the reporting form renders: the published configuration. */
-  const config = useMemo(() => applyOverrides(vaersForm, published.overrides), [published]);
-  /** What the configuration screen edits and previews. */
+  /**
+   * What the reporting form renders: the published configuration, read in the
+   * reporter's language. Localising here rather than in each component is what
+   * keeps language out of the branching engine entirely, because everything
+   * downstream receives one already-translated configuration and cannot tell
+   * which language it is in.
+   */
+  const config = useMemo(
+    () =>
+      localizeConfig(
+        applyOverrides(vaersForm, published.overrides),
+        locale,
+        effectiveTranslations(published.overrides, locale),
+      ),
+    [published, locale],
+  );
+  const localFaqs = useMemo(
+    () => localizeFaqs(published.faqs, locale, effectiveTranslations(published.overrides, locale)),
+    [published, locale],
+  );
+  /** What the configuration screen edits: always the English base. */
   const draftConfig = useMemo(() => applyOverrides(vaersForm, overrides), [overrides]);
-  const configCheck = useMemo(() => checkConfiguration(draftConfig, vaersForm), [draftConfig]);
+  // Built once per draft change rather than once per caller. The configuration
+  // screen renders one of these components per translatable string, and
+  // rebuilding a few hundred entries inside each of them turned every keystroke
+  // into thousands of property copies.
+  const draftTranslationMaps = useMemo(() => {
+    const out: Record<string, Translations> = {};
+    for (const { code } of LOCALES) out[code] = effectiveTranslations(overrides, code);
+    return out;
+  }, [overrides]);
+  const draftTranslations = useCallback(
+    (which: Locale) => draftTranslationMaps[which] ?? {},
+    [draftTranslationMaps],
+  );
+  /**
+   * The check the draft is held to. Every language other than the base is a
+   * requirement, so a question added in English alone fails the check and
+   * cannot be published (PRS#19). Only the first language is reported at a
+   * time, which keeps the message a person can act on.
+   */
+  const translationRequirement = useMemo(() => {
+    const required = REQUIRED_LOCALES[0];
+    if (!required) return undefined;
+    return {
+      locale: required.code,
+      languageName: required.label,
+      translations: effectiveTranslations(overrides, required.code),
+      faqs,
+    };
+  }, [overrides, faqs]);
+  const configCheck = useMemo(
+    () => checkConfiguration(draftConfig, vaersForm, translationRequirement),
+    [draftConfig, translationRequirement],
+  );
+  const missingTranslations = useMemo(
+    () => new Set(configCheck.missingTranslations),
+    [configCheck],
+  );
+
+  const setTranslation = useCallback((which: Locale, key: string, text: string) => {
+    setOverrides((prev) => {
+      const shipped = SHIPPED_TRANSLATIONS[which]?.[key];
+      const forLocale = { ...(prev.translations?.[which] ?? {}) };
+      // Typing the shipped wording back in is not an edit, so it clears rather
+      // than being stored as an override that shadows an identical string.
+      if (text === '' || text === shipped) delete forLocale[key];
+      else forLocale[key] = text;
+      return { ...prev, translations: { ...(prev.translations ?? {}), [which]: forLocale } };
+    });
+  }, []);
   const hasDraftChanges = useMemo(
     () =>
       JSON.stringify({ o: overrides, f: faqs }) !==
@@ -454,11 +590,24 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
     setOverrides((prev) => {
       const moved = { ...(prev.moved ?? {}) };
       const wasMoved = fieldId in moved;
-      if (!prev.fields[fieldId] && !wasMoved) return prev;
+      const prefix = `field.${fieldId}.`;
+      const hadTranslation = Object.values(prev.translations ?? {}).some((m) =>
+        Object.keys(m ?? {}).some((k) => k.startsWith(prefix)),
+      );
+      if (!prev.fields[fieldId] && !wasMoved && !hadTranslation) return prev;
       const fields = { ...prev.fields };
       delete fields[fieldId];
       delete moved[fieldId];
-      return { ...prev, fields, moved };
+      // Reverting a question returns its wording to how it shipped in every
+      // language. Leaving a translation of wording that no longer exists behind
+      // would be worse than having none.
+      const translations: Partial<Record<Locale, Translations>> = {};
+      for (const [code, map] of Object.entries(prev.translations ?? {})) {
+        const kept: Translations = {};
+        for (const [k, v] of Object.entries(map ?? {})) if (!k.startsWith(prefix)) kept[k] = v;
+        translations[code as Locale] = kept;
+      }
+      return { ...prev, fields, moved, translations };
     });
   }, []);
 
@@ -548,7 +697,11 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
     () => JSON.stringify(faqs) !== JSON.stringify(defaultFaqs),
     [faqs],
   );
+  const translationsChanged = Object.values(overrides.translations ?? {}).some(
+    (m) => Object.keys(m ?? {}).length > 0,
+  );
   const isCustomized =
+    translationsChanged ||
     Object.keys(overrides.moved ?? {}).length > 0 ||
     Object.keys(overrides.fields).length > 0 ||
     Object.keys(overrides.sections).length > 0 ||
@@ -557,7 +710,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
 
   const value: ConfigContextValue = {
     config,
-    faqs,
+    faqs: localFaqs,
     isCustomized,
     setFieldOverride,
     setSectionOverride,
@@ -575,12 +728,16 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
     isFieldAdded: (id) => (overrides.added ?? []).some((a) => a.field.id === id),
     setAddedFieldCondition,
     configCheck,
+    draftTranslations,
+    translationOf: (which, key) => overrides.translations?.[which]?.[key] ?? '',
+    setTranslation,
+    missingTranslations,
     draftConfig,
     draftFaqs: faqs,
     hasDraftChanges,
     history,
     publish: (label, by) => {
-      const check = checkConfiguration(draftConfig, vaersForm);
+      const check = checkConfiguration(draftConfig, vaersForm, translationRequirement);
       if (!check.ok) {
         return {
           ok: false,

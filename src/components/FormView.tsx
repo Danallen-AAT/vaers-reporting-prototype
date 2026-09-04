@@ -4,12 +4,14 @@
 // ---------------------------------------------------------------------------
 import { useRef, useState } from 'react';
 import { useConfig } from '../state/ConfigStore';
+import { useLocale } from '../state/LocaleStore';
 import { FormProvider } from '../state/FormContext';
 import { FormRenderer } from './FormRenderer';
 import { FaqPanel } from './FaqPanel';
 
 export function FormView() {
   const { config, faqs } = useConfig();
+  const { t } = useLocale();
   const [faqOpen, setFaqOpen] = useState(false);
   const faqButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -22,7 +24,7 @@ export function FormView() {
     <>
       <section className="app-header" aria-labelledby="form-title">
         <div className="wrap">
-          <p className="agency">Centers for Disease Control and Prevention · Prototype</p>
+          <p className="agency">{t('chrome.agency')}</p>
           <h1 id="form-title">{config.title}</h1>
           {config.intro && <p className="lede">{config.intro}</p>}
         </div>
@@ -37,7 +39,7 @@ export function FormView() {
             aria-haspopup="dialog"
             onClick={() => setFaqOpen(true)}
           >
-            Help &amp; FAQ
+            {t('form.helpFaq')}
           </button>
         </div>
 

@@ -8,6 +8,7 @@
 // ---------------------------------------------------------------------------
 import { useRef, useState } from 'react';
 import { useForm } from '../state/FormContext';
+import { useLocale } from '../state/LocaleStore';
 import type { FieldConfig } from '../config/types';
 
 interface Props {
@@ -24,6 +25,7 @@ const fmtSize = (bytes: number) => {
 
 export function FileUpload({ fieldKey, field, describedBy }: Props) {
   const { values, setValue } = useForm();
+  const { t } = useLocale();
   const names: string[] = Array.isArray(values[fieldKey]) ? (values[fieldKey] as string[]) : [];
   const meta = useRef(new Map<string, string>());
   const inputRef = useRef<HTMLInputElement>(null);
@@ -40,14 +42,14 @@ export function FileUpload({ fieldKey, field, describedBy }: Props) {
       const ext = '.' + (f.name.split('.').pop() ?? '').toLowerCase();
       if (!accept.includes(ext)) {
         rejected.push(
-          `${f.name}: Phase 1 accepts medical record and vaccine documents as ${accept.join(
-            ', ',
-          )}. Pictures and medical imaging arrive in Phase 2.`,
+          t('file.rejectType', { name: f.name, types: accept.join(', ') }),
         );
         continue;
       }
       if (f.size > maxMB * 1024 * 1024) {
-        rejected.push(`${f.name}: larger than the ${maxMB} MB limit (${fmtSize(f.size)}).`);
+        rejected.push(
+          t('file.rejectSize', { name: f.name, mb: maxMB, size: fmtSize(f.size) }),
+        );
         continue;
       }
       if (names.includes(f.name) || added.includes(f.name)) continue;
@@ -81,7 +83,7 @@ export function FileUpload({ fieldKey, field, describedBy }: Props) {
         onChange={onChange}
       />
       <p className="file-policy">
-        Accepted: {accept.join(', ')} up to {maxMB} MB each. Attach as many documents as apply.
+        {t('file.policy', { types: accept.join(', '), mb: maxMB })}
       </p>
       {rejections.map((r) => (
         <p key={r} className="field-error" role="alert">
@@ -90,11 +92,13 @@ export function FileUpload({ fieldKey, field, describedBy }: Props) {
       ))}
       <div aria-live="polite" className="sr-only">
         {names.length === 0
-          ? 'No documents attached.'
-          : `${names.length} ${names.length === 1 ? 'document' : 'documents'} attached.`}
+          ? t('file.noneAttached')
+          : names.length === 1
+            ? t('file.oneAttached')
+            : t('file.manyAttached', { n: names.length })}
       </div>
       {names.length > 0 && (
-        <ul className="file-list" aria-label="Attached documents">
+        <ul className="file-list" aria-label={t('file.listLabel')}>
           {names.map((n) => (
             <li key={n} className="file-item">
               <span className="file-name">{n}</span>
@@ -103,9 +107,9 @@ export function FileUpload({ fieldKey, field, describedBy }: Props) {
                 type="button"
                 className="btn btn-outline btn-small"
                 onClick={() => remove(n)}
-                aria-label={`Remove ${n}`}
+                aria-label={t('file.removeLabel', { name: n })}
               >
-                Remove
+                {t('file.remove')}
               </button>
             </li>
           ))}

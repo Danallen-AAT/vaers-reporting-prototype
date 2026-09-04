@@ -162,9 +162,17 @@ describe('adding a question through the admin surface', () => {
     expect(within(root).queryByRole('combobox', { name: /visibility rule/i })).toBeNull();
   }, 30000);
 
-  it('explains base-schema branching rules in plain language', () => {
+  it('explains base-schema branching rules in plain language', async () => {
+    const user = userEvent.setup();
     renderAdmin();
-    // The 1.6.2 error-type question is conditional on the error answer.
+    // The 1.6.2 error-type question is conditional on the error answer. It
+    // lives in a section that builds itself when opened, like every section
+    // after the first, so opening it is part of reaching the question.
+    const editor = document.querySelector('.admin-editor') as HTMLElement;
+    const heading = [...editor.querySelectorAll('.se-title')].find(
+      (el) => el.textContent === 'Vaccine administration error',
+    ) as HTMLElement;
+    await user.click(heading);
     expect(screen.getAllByText(/shown when/i).length).toBeGreaterThan(0);
   }, 30000);
 });

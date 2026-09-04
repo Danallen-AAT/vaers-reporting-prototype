@@ -9,6 +9,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { SurveyConfig } from '../config/types';
 import { useFocusTrap } from '../hooks/useFocusTrap';
+import { useLocale } from '../state/LocaleStore';
 
 export function SurveyDialog({
   open,
@@ -23,6 +24,7 @@ export function SurveyDialog({
   const dialogRef = useRef<HTMLDivElement>(null);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [done, setDone] = useState(false);
+  const { t } = useLocale();
 
   useFocusTrap(open, dialogRef);
 
@@ -60,13 +62,13 @@ export function SurveyDialog({
       >
         <div className="faq-dialog-head">
           <h2 id={titleId} tabIndex={-1} ref={headingRef}>
-            {done ? 'Thank you' : survey.title}
+            {done ? t('survey.thankYou') : survey.title}
           </h2>
           <button
             type="button"
             className="faq-close"
             onClick={onClose}
-            aria-label={`Close the ${survey.title} survey`}
+            aria-label={t('survey.close', { title: survey.title })}
           >
             &#10005;
           </button>
@@ -126,10 +128,10 @@ export function SurveyDialog({
 
             <div className="form-actions">
               <button type="submit" className="btn btn-primary">
-                Send feedback
+                {t('survey.send')}
               </button>
               <button type="button" className="btn btn-link" onClick={onClose}>
-                No thanks
+                {t('survey.noThanks')}
               </button>
             </div>
           </form>

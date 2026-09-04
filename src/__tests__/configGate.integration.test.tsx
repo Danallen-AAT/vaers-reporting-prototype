@@ -76,6 +76,13 @@ describe('configuration integrity gate', () => {
       'when',
     );
 
+    // A question added in English alone is not publishable, so its Spanish is
+    // part of adding it. See bilingual.integration for that gate on its own.
+    await user.type(
+      screen.getByRole('textbox', { name: /label in spanish for custom_clinic_region/i }),
+      'Region de la clinica',
+    );
+
     expect(screen.getByRole('status', { name: /configuration check/i })).toHaveTextContent(
       /passed/i,
     );

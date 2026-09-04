@@ -98,6 +98,23 @@ describe('accessibility: public reporting form', () => {
     expect(await axe(container, AXE_OPTS)).toHaveNoViolations();
   }, 20000);
 
+  it('has no violations on the Spanish landing page', async () => {
+    window.location.hash = '#/';
+    const user = userEvent.setup();
+    const { container } = render(<App />);
+    await user.click(screen.getByRole('button', { name: 'Español' }));
+    expect(document.documentElement.lang).toBe('es');
+    expect(await axe(container, AXE_OPTS)).toHaveNoViolations();
+  }, 20000);
+
+  it('has no violations on the Spanish provider path', async () => {
+    const user = userEvent.setup();
+    const { container } = render(<App />);
+    await user.click(screen.getByRole('button', { name: 'Español' }));
+    await user.click(screen.getByRole('radio', { name: 'Profesional de la salud' }));
+    expect(await axe(container, AXE_OPTS)).toHaveNoViolations();
+  }, 20000);
+
   it('has no violations with a field tooltip revealed', async () => {
     const user = userEvent.setup();
     const { container } = render(<App />);

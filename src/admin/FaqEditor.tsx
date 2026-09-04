@@ -3,6 +3,8 @@
 // panel on the reporting form reflects changes immediately.
 // ---------------------------------------------------------------------------
 import { useConfig } from '../state/ConfigStore';
+import { faqKey } from '../config/locale';
+import { TranslationField } from './TranslationField';
 
 export function FaqEditor() {
   const { draftFaqs: faqs, addFaq, updateFaq, removeFaq } = useConfig();
@@ -32,6 +34,12 @@ export function FaqEditor() {
                   onChange={(e) => updateFaq(faq.id, { question: e.target.value })}
                 />
               </label>
+              <TranslationField
+                tKey={faqKey(faq.id, 'question')}
+                english={faq.question}
+                caption="Question"
+                describes={`FAQ ${i + 1}`}
+              />
               <label className="fe-row">
                 <span className="fe-cap">Answer</span>
                 <textarea
@@ -42,6 +50,13 @@ export function FaqEditor() {
                   onChange={(e) => updateFaq(faq.id, { answer: e.target.value })}
                 />
               </label>
+              <TranslationField
+                tKey={faqKey(faq.id, 'answer')}
+                english={faq.answer}
+                caption="Answer"
+                describes={`FAQ ${i + 1}`}
+                multiline
+              />
             </div>
             <div className="fe-actions">
               <button

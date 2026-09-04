@@ -11,6 +11,9 @@ import { useState } from 'react';
 import type { FieldConfig, RequiredRule } from '../config/types';
 import { ConfirmAction } from '../components/ConfirmAction';
 import { useConfig, type FieldOverride } from '../state/ConfigStore';
+import { fieldKey } from '../config/locale';
+import { TranslationField } from './TranslationField';
+import { OptionTranslations } from './OptionTranslations';
 import { allFields, conditionFor, conditionText, eligibleControllers } from './conditions';
 
 function requiredValue(r?: RequiredRule): 'required' | 'optional' | 'conditional' {
@@ -106,6 +109,12 @@ export function FieldEditor({
             onChange={(e) => patch({ label: e.target.value })}
           />
         </label>
+        <TranslationField
+          tKey={fieldKey(field.id, 'label')}
+          english={field.label}
+          caption="Label"
+          describes={field.id}
+        />
 
         {showPublic && (
           <label className="fe-row">
@@ -121,6 +130,14 @@ export function FieldEditor({
             />
           </label>
         )}
+        {showPublic && (
+          <TranslationField
+            tKey={fieldKey(field.id, 'publicLabel')}
+            english={field.publicLabel}
+            caption="Public label"
+            describes={field.id}
+          />
+        )}
 
         <label className="fe-row">
           <span className="fe-cap">
@@ -134,6 +151,13 @@ export function FieldEditor({
             onChange={(e) => patch({ helpText: e.target.value })}
           />
         </label>
+        <TranslationField
+          tKey={fieldKey(field.id, 'helpText')}
+          english={field.helpText}
+          caption="Help text"
+          describes={field.id}
+          multiline
+        />
 
         {showPublic && (
           <label className="fe-row">
@@ -149,6 +173,15 @@ export function FieldEditor({
             />
           </label>
         )}
+        {showPublic && (
+          <TranslationField
+            tKey={fieldKey(field.id, 'publicHelpText')}
+            english={field.publicHelpText}
+            caption="Public help text"
+            describes={field.id}
+            multiline
+          />
+        )}
 
         <label className="fe-row">
           <span className="fe-cap">
@@ -162,6 +195,13 @@ export function FieldEditor({
             onChange={(e) => patch({ tooltip: e.target.value })}
           />
         </label>
+        <TranslationField
+          tKey={fieldKey(field.id, 'tooltip')}
+          english={field.tooltip}
+          caption="Tooltip"
+          describes={field.id}
+          multiline
+        />
 
         {showPublic && (
           <label className="fe-row">
@@ -177,6 +217,19 @@ export function FieldEditor({
             />
           </label>
         )}
+        {showPublic && (
+          <TranslationField
+            tKey={fieldKey(field.id, 'publicTooltip')}
+            english={field.publicTooltip}
+            caption="Public tooltip"
+            describes={field.id}
+            multiline
+          />
+        )}
+
+        {/* Every answer a reporter can choose is a label too, so a choice
+            question is only translated when its choices are. */}
+        <OptionTranslations field={field} />
 
         <label className="fe-row">
           <span className="fe-cap">Required</span>

@@ -7,11 +7,13 @@
 // preview on the right at once, while reporters stay on the published
 // version until a publish: the "no redeploy" low-code story, on camera.
 // ---------------------------------------------------------------------------
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ConfirmAction } from '../components/ConfirmAction';
-import { useConfig } from '../state/ConfigStore';
+import { REQUIRED_LOCALES, useConfig } from '../state/ConfigStore';
 import { FormProvider } from '../state/FormContext';
+import { LocaleOverride } from '../state/LocaleStore';
 import { FormRenderer } from '../components/FormRenderer';
+import { LOCALES, localizeConfig, translatableKeys, type Locale } from '../config/locale';
 import { SectionEditor } from './SectionEditor';
 import { FaqEditor } from './FaqEditor';
 
@@ -26,12 +28,35 @@ export function AdminPanel({ onSignOut, user }: { onSignOut?: () => void; user?:
     discardDraft,
     restoreVersion,
     history,
+    draftFaqs,
+    draftTranslations,
   } = useConfig();
   const [changeLabel, setChangeLabel] = useState('');
   const [publishError, setPublishError] = useState<string | null>(null);
   const [publishedNote, setPublishedNote] = useState<string | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [previewPath, setPreviewPath] = useState<'public' | 'provider'>('provider');
+  const [previewLocale, setPreviewLocale] = useState<Locale>('en');
+
+  // Coverage is counted from the draft rather than from a stored total, so a
+  // question added a moment ago is in the denominator immediately.
+  const coverage = useMemo(() => {
+    const keys = translatableKeys(draftConfig, draftFaqs);
+    return REQUIRED_LOCALES.map(({ code, label }) => {
+      const have = draftTranslations(code);
+      return {
+        code,
+        label,
+        total: keys.length,
+        missing: keys.filter((k) => !have[k]?.trim()).length,
+      };
+    });
+  }, [draftConfig, draftFaqs, draftTranslations]);
+
+  const previewConfig = useMemo(
+    () => localizeConfig(draftConfig, previewLocale, draftTranslations(previewLocale)),
+    [draftConfig, previewLocale, draftTranslations],
+  );
 
   return (
     <main id="main" className="admin" tabIndex={-1}>
@@ -50,9 +75,11 @@ export function AdminPanel({ onSignOut, user }: { onSignOut?: () => void; user?:
         <p className="admin-lede">
           Edit question labels, help text, requiredness, and FAQs. Add questions,
           set the answer that makes them appear, and move questions between
-          sections. Edits are held as a draft and reach reporters when you
-          publish, with no code change and no redeploy. This is how a CDC
-          program owner maintains the form.
+          sections. Every piece of wording is edited in English and in Spanish
+          together, and a question missing its Spanish cannot be published. Edits
+          are held as a draft and reach reporters when you publish, with no code
+          change and no redeploy. This is how a CDC program owner maintains the
+          form.
         </p>
         <div className="admin-actions">
           <a className="btn btn-primary" href="#/">
@@ -76,6 +103,26 @@ export function AdminPanel({ onSignOut, user }: { onSignOut?: () => void; user?:
               Default configuration
             </span>
           )}
+        </div>
+
+        <div className="lang-coverage" role="status" aria-label="Translation coverage">
+          {coverage.map((c) => (
+            <p key={c.code} className={c.missing === 0 ? 'lc-ok' : 'lc-bad'}>
+              <strong>{c.label}</strong>{' '}
+              {c.missing === 0 ? (
+                <>
+                  complete. All {c.total} pieces of wording in this draft have a {c.label}{' '}
+                  version, so it can be published.
+                </>
+              ) : (
+                <>
+                  incomplete. {c.missing} of {c.total} pieces of wording have no {c.label}{' '}
+                  version yet. Publishing is blocked until they do, and the inputs that need
+                  one are marked below.
+                </>
+              )}
+            </p>
+          ))}
         </div>
 
         <div
@@ -262,19 +309,36 @@ export function AdminPanel({ onSignOut, user }: { onSignOut?: () => void; user?:
                 Provider
               </button>
             </div>
+            <div className="preview-toggle" role="group" aria-label="Preview language">
+              {LOCALES.map((l) => (
+                <button
+                  key={l.code}
+                  type="button"
+                  className="seg"
+                  lang={l.code}
+                  aria-pressed={previewLocale === l.code}
+                  onClick={() => setPreviewLocale(l.code)}
+                >
+                  {l.endonym}
+                </button>
+              ))}
+            </div>
           </div>
           <p className="preview-note">
             Rendered by the same engine as the public form, showing the draft as you
-            edit it. Reporters keep seeing the published version until you publish.
+            edit it, in either language. Reporters keep seeing the published version
+            until you publish.
           </p>
-          <div className="preview-frame">
-            <FormProvider
-              key={previewPath}
-              config={draftConfig}
-              initialValues={{ reporterType: previewPath }}
-            >
-              <FormRenderer />
-            </FormProvider>
+          <div className="preview-frame" lang={previewLocale}>
+            <LocaleOverride locale={previewLocale}>
+              <FormProvider
+                key={`${previewPath}-${previewLocale}`}
+                config={previewConfig}
+                initialValues={{ reporterType: previewPath }}
+              >
+                <FormRenderer />
+              </FormProvider>
+            </LocaleOverride>
           </div>
         </aside>
       </div>

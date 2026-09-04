@@ -4,10 +4,13 @@
 // Announced politely to screen readers so it does not interrupt typing.
 // ---------------------------------------------------------------------------
 import { useForm } from '../state/FormContext';
+import { useLocale } from '../state/LocaleStore';
+import { uiText, type UiKey } from '../config/ui';
 import { answersOnScreen, getDocSuggestions } from '../formEngine/docSuggestions';
 
 export function DocSuggestions() {
   const { config, values } = useForm();
+  const { locale, t } = useLocale();
   // Suggestions follow the live instrument, not retained answers.
   const suggestions = getDocSuggestions(answersOnScreen(config, values));
 
@@ -16,17 +19,14 @@ export function DocSuggestions() {
   return (
     <aside className="doc-suggest" aria-labelledby="doc-suggest-title" aria-live="polite">
       <h3 id="doc-suggest-title" className="doc-suggest-title">
-        Documents that would help
+        {t('doc.title')}
       </h3>
-      <p className="doc-suggest-lede">
-        Based on your answers, these records would strengthen this report. All are
-        optional.
-      </p>
+      <p className="doc-suggest-lede">{t('doc.lede')}</p>
       <ul className="doc-suggest-list">
         {suggestions.map((s) => (
           <li key={s.id}>
-            <span className="doc-name">{s.document}</span>
-            <span className="doc-why">{s.why}</span>
+            <span className="doc-name">{uiText(`doc.${s.id}.document` as UiKey, locale)}</span>
+            <span className="doc-why">{uiText(`doc.${s.id}.why` as UiKey, locale)}</span>
           </li>
         ))}
       </ul>

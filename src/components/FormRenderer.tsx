@@ -9,6 +9,7 @@
 // ---------------------------------------------------------------------------
 import { useEffect, useRef, useState } from 'react';
 import { useForm } from '../state/FormContext';
+import { useLocale } from '../state/LocaleStore';
 import { getVisibleForm } from '../formEngine/visibility';
 import { buildStructuredOutput } from '../formEngine/output';
 import { repeatFieldId, type FieldConfig, type SectionConfig } from '../config/types';
@@ -31,6 +32,7 @@ export function FormRenderer() {
     addInstance,
     removeInstance,
   } = useForm();
+  const { t } = useLocale();
   const sections = getVisibleForm(config, values);
   const isPublic = activePath === 'public';
   const errorCount = Object.keys(errors).length;
@@ -107,7 +109,7 @@ export function FormRenderer() {
                 className="btn btn-link btn-danger repeat-remove"
                 onClick={() => removeInstance(section, i)}
               >
-                Remove
+                {t('repeat.remove')}
                 <span className="sr-only">
                   {' '}
                   {section.repeat!.itemLabel} {i + 1}
@@ -136,9 +138,9 @@ export function FormRenderer() {
       {activePath && (
         <div className="path-banner" role="status">
           <span className="path-badge">
-            {isPublic ? 'Public reporter' : 'Healthcare provider'}
+            {isPublic ? t('path.public') : t('path.provider')}
           </span>
-          <span className="path-note">Wording and fields are tailored to this path.</span>
+          <span className="path-note">{t('path.note')}</span>
           {/* Non-destructive: jumps to the reporter-type question, so both
               ways of switching paths share one behavior and answers survive
               wherever they still apply. Clearing work is a separate control
@@ -146,16 +148,16 @@ export function FormRenderer() {
           <button
             type="button"
             className="btn btn-link"
-            aria-label="Change reporter type"
+            aria-label={t('path.changeLabel')}
             onClick={() => jumpTo('reporterType')}
           >
-            Change
+            {t('path.change')}
           </button>
           <ConfirmAction
-            triggerLabel="Start over"
-            prompt="Starting over clears every answer on this report."
-            confirmLabel="Clear all answers"
-            cancelLabel="Keep my answers"
+            triggerLabel={t('path.startOver')}
+            prompt={t('path.startOverPrompt')}
+            confirmLabel={t('path.startOverConfirm')}
+            cancelLabel={t('path.startOverCancel')}
             triggerClass="btn btn-link"
             fallbackFocusId="reporterType"
             onConfirm={() => {
@@ -200,8 +202,7 @@ export function FormRenderer() {
           aria-labelledby="error-summary-title"
         >
           <p id="error-summary-title" className="error-summary-title">
-            There {errorCount === 1 ? 'is' : 'are'} {errorCount}{' '}
-            {errorCount === 1 ? 'problem' : 'problems'} to fix:
+            {errorCount === 1 ? t('errors.one') : t('errors.many', { n: errorCount })}
           </p>
           <ul>
             {sections.flatMap(({ section, fields, instances }) =>
@@ -233,7 +234,7 @@ export function FormRenderer() {
       {activePath && (
         <div className="form-actions">
           <button type="submit" className="btn btn-primary">
-            Review submission
+            {t('actions.review')}
           </button>
         </div>
       )}
@@ -246,12 +247,9 @@ export function FormRenderer() {
           tabIndex={-1}
         >
           <h2 id="review-heading" className="section-title">
-            Review your report before it becomes final
+            {t('review.heading')}
           </h2>
-          <p className="section-desc">
-            Check each answer below. You can go back and correct anything.
-            Nothing is submitted until you confirm.
-          </p>
+          <p className="section-desc">{t('review.lede')}</p>
           <dl className="review-list">
             {sections.map(({ section, fields, instances }) =>
               section.repeat
@@ -285,10 +283,10 @@ export function FormRenderer() {
           </dl>
           <div className="form-actions">
             <button type="button" className="btn btn-primary" onClick={confirmFinal}>
-              Confirm and finalize report
+              {t('review.confirm')}
             </button>
             <button type="button" className="btn btn-outline" onClick={() => setStage('editing')}>
-              Go back and make corrections
+              {t('review.back')}
             </button>
           </div>
         </section>
@@ -297,22 +295,15 @@ export function FormRenderer() {
       {showOutput && errorCount === 0 && (
         <section className="structured-output" aria-labelledby="output-heading">
           <h2 id="output-heading" className="section-title">
-            Structured output (VAERS-compatible)
+            {t('output.heading')}
           </h2>
-          <p className="section-desc">
-            Your confirmed report as clean structured JSON from one isolated
-            mapping layer, keyed to the published VAERS 2.0 form items where a
-            counterpart exists. Fields born of the modernized workflow await the
-            data element definitions CDC furnishes at kickoff, and the meta
-            block below reports both counts openly (see How it works). Nothing in
-            this report is stored or transmitted.
-          </p>
+          <p className="section-desc">{t('output.lede')}</p>
           <div className="form-actions output-actions">
             <button type="button" className="btn btn-outline" onClick={downloadOutput}>
-              Download JSON
+              {t('output.download')}
             </button>
           </div>
-          <pre className="json-preview" aria-label="Structured submission data">
+          <pre className="json-preview" aria-label={t('output.jsonLabel')}>
             {JSON.stringify(buildStructuredOutput(config, values), null, 2)}
           </pre>
         </section>

@@ -12,6 +12,8 @@
 // ---------------------------------------------------------------------------
 import { getFormProgress, type SectionState } from '../formEngine/progress';
 import { useForm } from '../state/FormContext';
+import { useLocale } from '../state/LocaleStore';
+import type { UiKey } from '../config/ui';
 import { jumpTo } from '../lib/inPageJump';
 
 const MARK: Record<SectionState, string> = {
@@ -21,11 +23,13 @@ const MARK: Record<SectionState, string> = {
   optional: '-',
 };
 
-const STATUS: Record<SectionState, string> = {
-  complete: 'complete',
-  partial: 'in progress',
-  empty: 'not started',
-  optional: 'optional',
+// State is announced in words as well as drawn as a glyph, so the readout does
+// not depend on seeing the mark. The words are interface text like any other.
+const STATUS: Record<SectionState, UiKey> = {
+  complete: 'progress.complete',
+  partial: 'progress.partial',
+  empty: 'progress.empty',
+  optional: 'progress.optional',
 };
 
 // These are buttons rather than anchors on purpose. They are not navigation,
@@ -34,6 +38,7 @@ const STATUS: Record<SectionState, string> = {
 
 export function ProgressPanel() {
   const { config, values, activePath } = useForm();
+  const { t } = useLocale();
 
   // Before a reporter type is chosen there is only the one question, and a
   // progress bar reading zero percent would be noise.
@@ -46,11 +51,13 @@ export function ProgressPanel() {
     <section className="progress-panel" aria-labelledby="progress-heading">
       <div className="progress-head">
         <h2 id="progress-heading" className="progress-title">
-          Completion status
+          {t('progress.heading')}
         </h2>
         <p className="progress-count">
-          <strong>{progress.requiredFilled}</strong> of {progress.requiredTotal} required
-          {progress.requiredTotal === 1 ? ' answer' : ' answers'}
+          <strong>{progress.requiredFilled}</strong>{' '}
+          {progress.requiredTotal === 1
+            ? t('progress.countOne', { total: progress.requiredTotal })
+            : t('progress.countMany', { total: progress.requiredTotal })}
         </p>
       </div>
 
@@ -61,7 +68,7 @@ export function ProgressPanel() {
         aria-valuemin={0}
         aria-valuemax={100}
         aria-labelledby="progress-heading"
-        aria-valuetext={`${progress.percent} percent of required questions answered`}
+        aria-valuetext={t('progress.valueText', { percent: progress.percent })}
       >
         <div
           className={`progress-fill${progress.complete ? ' is-complete' : ''}`}
@@ -78,8 +85,10 @@ export function ProgressPanel() {
               </span>
               <span className="progress-label">{s.title}</span>
               <span className="sr-only">
-                , {STATUS[s.state]}
-                {s.required > 0 ? `, ${s.filled} of ${s.required} required answered` : ''}
+                , {t(STATUS[s.state])}
+                {s.required > 0
+                  ? `, ${t('progress.detail', { filled: s.filled, required: s.required })}`
+                  : ''}
               </span>
             </button>
           </li>
