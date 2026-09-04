@@ -1691,10 +1691,22 @@ legend.field-label .tip-toggle {
   background: #f2fbf7;
   color: #10503a;
 }
-.lang-coverage .lc-bad {
-  border-color: #a3231b;
-  background: #fdf3f2;
-  color: #7d1b15;
+/* Amber, not red. Wording that has not been written yet is work outstanding,
+   not a fault, and it must not look like the integrity check failing. */
+.lang-coverage .lc-todo {
+  border-color: #e6c34d;
+  background: #fffaeb;
+  color: #6b4d00;
+}
+.lang-todo-list {
+  margin: 6px 0 0;
+  padding: 8px 12px 8px 32px;
+  border: 1px solid #e6c34d;
+  border-top: 0;
+  border-radius: 0 0 6px 6px;
+  background: #fffaeb;
+  color: #6b4d00;
+  font-size: 0.88rem;
 }
 .lang-coverage p + p {
   margin-top: 0.35rem;

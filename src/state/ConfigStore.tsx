@@ -744,6 +744,14 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
           reason: `The draft does not pass its own check, so it cannot go live. ${check.issues[0].message}`,
         };
       }
+      // A separate condition with a separate message. The form is sound; it is
+      // just not finished in every language it publishes in yet.
+      if (!check.translationOk) {
+        return {
+          ok: false,
+          reason: `Not every question is translated yet, so this cannot go live. ${check.translationIssues[0].message}`,
+        };
+      }
       // The audit trail's whole value is saying why, so a description of
       // nothing at all, including invisible characters, is refused rather than
       // recorded as "Untitled change".

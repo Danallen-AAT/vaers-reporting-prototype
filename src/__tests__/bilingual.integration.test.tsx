@@ -152,6 +152,22 @@ describe('a reporter choosing Spanish', () => {
   }, 40000);
 });
 
+describe('screens that stay English', () => {
+  it('marks the configuration screen as English so a Spanish page does not claim it', () => {
+    // WCAG 3.1.2 Language of Parts. The configuration screen is a CDC staff tool
+    // and stays English on purpose; on a Spanish document that is a passage in
+    // another language, and an unmarked one is read with Spanish pronunciation.
+    render(
+      <LocaleProvider>
+        <ConfigProvider>
+          <AdminPanel user="dana.reviewer" />
+        </ConfigProvider>
+      </LocaleProvider>,
+    );
+    expect(screen.getByRole('main')).toHaveAttribute('lang', 'en');
+  }, 30000);
+});
+
 describe('the publish gate on translation', () => {
   it('opens with complete coverage for the shipped configuration', () => {
     renderAdmin();
@@ -171,7 +187,11 @@ describe('the publish gate on translation', () => {
     await user.click(screen.getByRole('button', { name: 'Add question' }));
 
     expect(screen.getByRole('status', { name: /translation coverage/i })).toHaveTextContent(
-      /spanish\s+incomplete/i,
+      /still needs? a spanish version/i,
+    );
+    // The form itself is sound, so the integrity check must not claim a problem.
+    expect(screen.getByRole('status', { name: /configuration check/i })).toHaveTextContent(
+      /passed/i,
     );
 
     await user.type(
@@ -182,6 +202,7 @@ describe('the publish gate on translation', () => {
 
     const refusal = screen.getByRole('alert');
     expect(refusal).toHaveTextContent(/not published/i);
+    expect(refusal).toHaveTextContent(/not every question is translated yet/i);
     expect(refusal).toHaveTextContent(/Clinic region/);
     expect(refusal).toHaveTextContent(/Spanish/);
     // The person who pressed the button is taken to the reason, rather than

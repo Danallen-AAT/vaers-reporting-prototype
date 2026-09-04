@@ -68,7 +68,10 @@ export function AdminPanel({ onSignOut, user }: { onSignOut?: () => void; user?:
   );
 
   return (
-    <main id="main" className="admin" tabIndex={-1}>
+    // English by decision: this is a CDC staff tool. The lang attribute marks it
+    // as a passage in another language when the document is Spanish (WCAG 3.1.2),
+    // and the note says so rather than letting it read as a missing translation.
+    <main id="main" className="admin" lang="en" tabIndex={-1}>
       <div className="wrap admin-head">
         <div className="admin-head-top">
           <div>
@@ -116,22 +119,30 @@ export function AdminPanel({ onSignOut, user }: { onSignOut?: () => void; user?:
 
         <div className="lang-coverage" role="status" aria-label="Translation coverage">
           {coverage.map((c) => (
-            <p key={c.code} className={c.missing === 0 ? 'lc-ok' : 'lc-bad'}>
+            <p key={c.code} className={c.missing === 0 ? 'lc-ok' : 'lc-todo'}>
               <strong>{c.label}</strong>{' '}
               {c.missing === 0 ? (
                 <>
                   complete. All {c.total} pieces of wording in this draft have a {c.label}{' '}
-                  version, so it can be published.
+                  version, so it is ready to publish.
                 </>
               ) : (
                 <>
-                  incomplete. {c.missing} of {c.total} pieces of wording have no {c.label}{' '}
-                  version yet. Publishing is blocked until they do, and the inputs that need
-                  one are marked below.
+                  {c.total - c.missing} of {c.total} pieces of wording done.{' '}
+                  {c.missing === 1 ? 'One still needs' : `${c.missing} still need`} a {c.label}{' '}
+                  version, and the inputs are marked below. Publishing waits until they are
+                  written.
                 </>
               )}
             </p>
           ))}
+          {configCheck.translationIssues.length > 0 && (
+            <ul className="lang-todo-list">
+              {configCheck.translationIssues.map((issue) => (
+                <li key={`${issue.code}-${issue.target}`}>{issue.message}</li>
+              ))}
+            </ul>
+          )}
         </div>
 
         <div

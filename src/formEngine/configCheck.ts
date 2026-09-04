@@ -43,7 +43,15 @@ export interface ConfigIssue {
 }
 
 export interface ConfigCheckResult {
+  /** True when the configuration is sound. Translation completeness is separate. */
   ok: boolean;
+  /**
+   * Integrity faults only: a question that can never appear, a rule that
+   * contradicts itself, a control with no name. Wording that has not been
+   * translated yet is not one of these. It is unfinished work rather than a
+   * broken form, and reporting it here would make this check cry wolf about the
+   * one thing it exists to be trusted on.
+   */
   issues: ConfigIssue[];
   /** How many answer combinations were evaluated. */
   combinations: number;
@@ -57,6 +65,10 @@ export interface ConfigCheckResult {
    * to mark the individual inputs.
    */
   missingTranslations: string[];
+  /** The same gaps, grouped per question, in language a program officer reads. */
+  translationIssues: ConfigIssue[];
+  /** True when every language the form publishes in is complete. */
+  translationOk: boolean;
 }
 
 /**
@@ -472,6 +484,7 @@ export function checkConfiguration(
   const missingTranslations = translation
     ? missingKeys(config, translation.translations, translation.faqs ?? [])
     : [];
+  const translationIssues: ConfigIssue[] = [];
   if (translation && missingTranslations.length > 0) {
     const labelOfField = new Map(fields.map((f) => [f.id, f.label || f.id]));
     const titleOfSection = new Map(config.sections.map((s) => [s.id, s.title || s.id]));
@@ -494,10 +507,10 @@ export function checkConfiguration(
       else byOwner.set(ownerKey, { target: id || kind, describe, count: 1 });
     }
     for (const { target, describe, count } of byOwner.values()) {
-      issues.push({
+      translationIssues.push({
         code: 'missing-translation',
         target,
-        message: `${count === 1 ? 'One piece of text in' : `${count} pieces of text in`} ${describe} ${count === 1 ? 'has' : 'have'} no ${translation.languageName} version yet. Add the ${translation.languageName} wording before publishing.`,
+        message: `${describe} still needs ${translation.languageName} for ${count === 1 ? 'one piece of wording' : `${count} pieces of wording`}.`,
       });
     }
   }
@@ -509,5 +522,7 @@ export function checkConfiguration(
     fieldsChecked: fields.length,
     truncated,
     missingTranslations,
+    translationIssues,
+    translationOk: missingTranslations.length === 0,
   };
 }

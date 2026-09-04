@@ -160,6 +160,7 @@ describe('the publish gate', () => {
       faqs: defaultFaqs,
     });
     expect(result.missingTranslations).toEqual([]);
+    expect(result.translationOk).toBe(true);
     expect(result.ok).toBe(true);
   });
 
@@ -178,9 +179,13 @@ describe('the publish gate', () => {
       translations: es,
       faqs: defaultFaqs,
     });
-    expect(result.ok).toBe(false);
+    // The configuration itself is sound. Only the translation is outstanding,
+    // and the two are reported apart so the integrity check keeps its meaning.
+    expect(result.ok).toBe(true);
+    expect(result.issues).toEqual([]);
+    expect(result.translationOk).toBe(false);
     expect(result.missingTranslations).toEqual(['field.q1.label']);
-    const issue = result.issues.find((i) => i.code === 'missing-translation');
+    const issue = result.translationIssues.find((i) => i.code === 'missing-translation');
     expect(issue?.target).toBe('q1');
     expect(issue?.message).toContain('Clinic region');
     expect(issue?.message).toContain('Spanish');
@@ -204,6 +209,7 @@ describe('the publish gate', () => {
       faqs: defaultFaqs,
     });
     expect(result.missingTranslations).toEqual([]);
+    expect(result.translationOk).toBe(true);
     expect(result.issues.some((i) => i.code === 'empty-label')).toBe(true);
   });
 

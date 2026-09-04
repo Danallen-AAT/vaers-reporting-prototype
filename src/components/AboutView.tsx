@@ -28,7 +28,9 @@ export function AboutView() {
   const fieldCount = config.sections.reduce((n, s) => n + s.fields.length, 0);
 
   return (
-    <main id="main" className="wrap about">
+    // English by decision: this page is written for evaluators of the prototype.
+    // Marked so a Spanish document does not claim it as Spanish (WCAG 3.1.2).
+    <main id="main" className="wrap about" lang="en">
       <h1>How this prototype works</h1>
       <p className="about-lede">
         A working demonstration of the modernized VAERS reporting form, built by Allen App Tools
