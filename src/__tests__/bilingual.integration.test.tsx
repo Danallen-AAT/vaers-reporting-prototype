@@ -202,7 +202,10 @@ describe('the publish gate on translation', () => {
 
     const refusal = screen.getByRole('alert');
     expect(refusal).toHaveTextContent(/not published/i);
-    expect(refusal).toHaveTextContent(/not every question is translated yet/i);
+    expect(refusal).toHaveTextContent(/Not every question is translated yet/);
+    // The named question reads as its own sentence after the reason, rather
+    // than starting lower case mid-paragraph.
+    expect(refusal).toHaveTextContent(/so this cannot go live\. The question/);
     expect(refusal).toHaveTextContent(/Clinic region/);
     expect(refusal).toHaveTextContent(/Spanish/);
     // The person who pressed the button is taken to the reason, rather than

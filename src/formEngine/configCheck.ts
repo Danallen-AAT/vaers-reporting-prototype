@@ -507,10 +507,13 @@ export function checkConfiguration(
       else byOwner.set(ownerKey, { target: id || kind, describe, count: 1 });
     }
     for (const { target, describe, count } of byOwner.values()) {
+      // Reads as its own sentence, because it is used both on its own in a list
+      // and after a full stop in the refusal a publish returns.
+      const sentence = `${describe} still needs ${translation.languageName} for ${count === 1 ? 'one piece of wording' : `${count} pieces of wording`}.`;
       translationIssues.push({
         code: 'missing-translation',
         target,
-        message: `${describe} still needs ${translation.languageName} for ${count === 1 ? 'one piece of wording' : `${count} pieces of wording`}.`,
+        message: sentence.charAt(0).toUpperCase() + sentence.slice(1),
       });
     }
   }
